@@ -1,0 +1,27 @@
+# DEVELOPMENT PHASES
+
+- [x] Phase 1  Foundation & Architecture (monorepo, Next.js, NestJS, Prisma, auth skeleton, layout)
+- [x] Phase 2  Auth, Multi School & Security (JWT, refresh rotation, sessions, RBAC, tenant isolation tests)
+- [x] Phase 3  School Master Data
+- [x] Phase 4  Student Information System
+- [x] Phase 5  Parent & Guardian Portal (API: guardian links, child invoices/outstanding)
+- [x] Phase 6  PPDB
+- [x] Phase 7  Academic & Class Management
+- [x] Phase 8  Smart Timetable
+- [x] Phase 9  Attendance
+- [x] Phase 10 LMS
+- [x] Phase 11 Assignment & Assessment
+- [x] Phase 12 CBT / Exam
+- [x] Phase 13 Gradebook & Rapor Digital
+- [x] Phase 14 BK & Student Wellbeing
+- [x] Phase 15 Smart Library
+- [x] Phase 16 Finance & Payment
+- [x] Phase 17 Scholarship
+- [x] Phase 18 Asset, Inventory & Facility
+- [x] Phase 19 HR, Teacher & Staff
+- [x] Phase 20 OSIS, Extracurricular & Achievement
+- [x] Phase 21 UKS, Canteen & Transport
+- [x] Phase 22 Communication, Document & Public Website
+- [x] Phase 23 Smart School & IoT
+- [x] Phase 24 AI School Copilot & Automation
+- [x] Phase 25 Command Center, Analytics & Production

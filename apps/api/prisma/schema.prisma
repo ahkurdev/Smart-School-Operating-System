@@ -1,0 +1,1478 @@
+// SSOS Prisma Schema
+// Tenant: Organization -> School -> Campus. All private data scoped by schoolId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum SessionKind {
+  PASSWORD
+  REFRESH
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGIN_FAILED
+  LOGOUT
+  READ_SENSITIVE
+  APPROVE
+  REJECT
+  PUBLISH
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum StudentStatus {
+  ACTIVE
+  GRADUATED
+  TRANSFERRED
+  WITHDRAWN
+  LEFT
+}
+
+enum ParentRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  SICK
+  EXCUSED
+  ABSENT
+  LATE
+  EARLY_LEAVE
+}
+
+enum PersonKind {
+  STUDENT
+  TEACHER
+  STAFF
+}
+
+// ---------- Identity ----------
+
+model User {
+  id               String     @id @default(uuid()) @db.Uuid
+  email            String?    @unique
+  username         String?    @unique
+  passwordHash     String
+  fullName         String
+  phone            String?
+  status           UserStatus @default(ACTIVE)
+  isPlatformAdmin  Boolean    @default(false)
+  failedLoginCount Int        @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  memberships Membership[]
+  sessions    Session[]
+  auditLogs   AuditLog[]
+  guardianOf  Guardian[]
+
+  @@index([status])
+  @@index([fullName])
+}
+
+/// User membership in one school with one role. One user may hold many memberships.
+model Membership {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  schoolId     String     @db.Uuid
+  role         String
+  customRoleId String?    @db.Uuid
+  isPrimary    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  deletedAt    DateTime?
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  customRole CustomRole? @relation(fields: [customRoleId], references: [id])
+
+  @@unique([userId, schoolId, role])
+  @@index([schoolId, role])
+  @@index([userId])
+}
+
+/// Revocable auth session. Refresh token rotated on use (hashed at rest).
+model Session {
+  id               String      @id @default(uuid()) @db.Uuid
+  userId           String      @db.Uuid
+  kind             SessionKind @default(PASSWORD)
+  refreshTokenHash String
+  userAgent        String?
+  ip               String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  lastUsedAt       DateTime    @default(now())
+  createdAt        DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshTokenHash])
+}
+
+// ---------- Tenant ----------
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  schools School[]
+
+  @@index([name])
+}
+
+model School {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  code           String   @unique
+  npsn           String?  @unique
+  address        String?
+  phone          String?
+  email          String?
+  logoUrl        String?
+  principalName  String?
+  vision         String?
+  mission        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  organization  Organization    @relation(fields: [organizationId], references: [id])
+  memberships   Membership[]
+  academicYears AcademicYear[]
+  customRoles   CustomRole[]
+  subjects      Subject[]
+  rooms         Room[]
+  students      Student[]
+  classes       Class[]
+  guardians     Guardian[]
+  timetable     TimetableSlot[]
+  attendance    Attendance[]
+  courses       Course[]
+  grades        Grade[]
+  counselingRecords CounselingRecord[]
+  books         Book[]
+  bookLoans     BookLoan[]
+  feeItems      FeeItem[]
+  invoices      Invoice[]
+  scholarshipPrograms ScholarshipProgram[]
+  assets        Asset[]
+  employees     Employee[]
+  extracurriculars Extracurricular[]
+  achievements  Achievement[]
+  uksVisits     UksVisit[]
+  canteenVendors CanteenVendor[]
+  buses         Bus[]
+  announcements Announcement[]
+  devices       Device[]
+  automationRules AutomationRule[]
+  ppdbRegistrations PpdbRegistration[]
+  questions     Question[]
+  exams         Exam[]
+  siteContents  SiteContent[]
+  newsPosts     NewsPost[]
+
+  @@index([organizationId])
+}
+
+// ---------- Academic ----------
+
+model AcademicYear {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school      School         @relation(fields: [schoolId], references: [id])
+  semesters   Semester[]
+  classes     Class[]
+  enrollments Enrollment[]
+  timetable   TimetableSlot[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId, isCurrent])
+}
+
+model Semester {
+  id             String  @id @default(uuid()) @db.Uuid
+  academicYearId String  @db.Uuid
+  name           String
+  sequence       Int
+  isCurrent      Boolean @default(false)
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  @@unique([academicYearId, sequence])
+}
+
+model Subject {
+  id          String   @id @default(uuid()) @db.Uuid
+  schoolId    String   @db.Uuid
+  code        String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  school     School          @relation(fields: [schoolId], references: [id])
+  timetable  TimetableSlot[]
+  courses    Course[]
+  grades     Grade[]
+  questions  Question[]
+  exams      Exam[]
+
+  @@unique([schoolId, code])
+  @@index([schoolId])
+}
+
+model Room {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  code      String
+  name      String
+  kind      String   @default("CLASSROOM") // CLASSROOM | LAB | OFFICE | HALL | OTHER
+  capacity  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school    School          @relation(fields: [schoolId], references: [id])
+  timetable TimetableSlot[]
+  assets    Asset[]
+  devices   Device[]
+
+  @@unique([schoolId, code])
+  @@index([schoolId])
+}
+
+// ---------- Students (Phase 4) ----------
+
+model Student {
+  id             String        @id @default(uuid()) @db.Uuid
+  schoolId       String        @db.Uuid
+  nis            String
+  nisn           String?
+  fullName       String
+  gender         Gender
+  birthPlace     String?
+  birthDate      DateTime?     @db.Date
+  address        String?
+  phone          String?
+  photoUrl       String?
+  status         StudentStatus @default(ACTIVE)
+  entryYear      String?
+  exitDate       DateTime?     @db.Date
+  exitReason     String?
+  userId         String?       @db.Uuid @unique
+  createdBy      String?       @db.Uuid
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  enrollments Enrollment[]
+  guardians   Guardian[]
+  submissions Submission[]
+  grades      Grade[]
+  examSessions ExamSession[]
+  reportCards ReportCard[]
+  counselingRecords CounselingRecord[]
+  bookLoans   BookLoan[]
+  invoices    Invoice[]
+  scholarshipApplications ScholarshipApplication[]
+  ekskulMembers ExtracurricularMember[]
+  achievements  Achievement[]
+  uksVisits     UksVisit[]
+
+  @@unique([schoolId, nis])
+  @@unique([schoolId, nisn])
+  @@index([schoolId, status])
+  @@index([fullName])
+}
+
+/// Student placement in a class for one academic year (rombel history preserved).
+model Enrollment {
+  id             String   @id @default(uuid()) @db.Uuid
+  studentId      String   @db.Uuid
+  classId        String   @db.Uuid
+  academicYearId String   @db.Uuid
+  status         String   @default("ACTIVE") // ACTIVE | PROMOTED | REPEATED | TRANSFERRED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class        Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  @@unique([studentId, academicYearId])
+  @@index([classId])
+  @@index([academicYearId])
+}
+
+/// Guardian (parent/wali) link to student. Guardian = a User account.
+model Guardian {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @db.Uuid
+  studentId String         @db.Uuid
+  schoolId  String         @db.Uuid
+  relation  ParentRelation @default(GUARDIAN)
+  isPrimary Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  deletedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id])
+
+  @@unique([userId, studentId])
+  @@index([studentId])
+  @@index([schoolId])
+}
+
+// ---------- Classes (Phase 7) ----------
+
+model Class {
+  id                String   @id @default(uuid()) @db.Uuid
+  schoolId          String   @db.Uuid
+  academicYearId    String   @db.Uuid
+  name              String
+  gradeLevel        Int
+  homeroomTeacherId String?  @db.Uuid
+  capacity          Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+
+  school       School          @relation(fields: [schoolId], references: [id])
+  academicYear AcademicYear    @relation(fields: [academicYearId], references: [id])
+  enrollments  Enrollment[]
+  timetable    TimetableSlot[]
+  courses      Course[]
+
+  @@unique([academicYearId, name])
+  @@index([schoolId, gradeLevel])
+}
+
+// ---------- Timetable (Phase 8) ----------
+
+/// One teaching slot. day 1=Monday..7=Sunday. Conflicts enforced in service layer.
+model TimetableSlot {
+  id          String   @id @default(uuid()) @db.Uuid
+  schoolId    String   @db.Uuid
+  academicYearId String @db.Uuid
+  classId     String   @db.Uuid
+  subjectId   String   @db.Uuid
+  teacherUserId String @db.Uuid
+  roomId      String?  @db.Uuid
+  dayOfWeek   Int
+  startTime   String   // "07:00"
+  endTime     String   // "07:45"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  school       School       @relation(fields: [schoolId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  class        Class        @relation(fields: [classId], references: [id])
+  subject      Subject      @relation(fields: [subjectId], references: [id])
+  room         Room?        @relation(fields: [roomId], references: [id])
+
+  @@index([schoolId, dayOfWeek])
+  @@index([classId, dayOfWeek])
+  @@index([teacherUserId])
+}
+
+// ---------- Attendance (Phase 9) ----------
+
+/// One attendance record per person per date.
+model Attendance {
+  id        String           @id @default(uuid()) @db.Uuid
+  schoolId  String           @db.Uuid
+  personId  String           @db.Uuid // studentId (or teacher/staff userId)
+  personKind PersonKind      @default(STUDENT)
+  date      DateTime         @db.Date
+  status    AttendanceStatus
+  note      String?
+  method    String           @default("MANUAL") // MANUAL | QR | RFID | NFC | PROVIDER
+  recordedBy String?         @db.Uuid
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@unique([personId, personKind, date])
+  @@index([schoolId, date])
+  @@index([schoolId, date, status])
+}
+
+// ---------- RBAC ----------
+
+/// School-scoped custom role with granular permissions (JSON array).
+model CustomRole {
+  id          String   @id @default(uuid()) @db.Uuid
+  schoolId    String   @db.Uuid
+  name        String
+  permissions String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  memberships Membership[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+// ---------- Audit ----------
+
+model AuditLog {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String?     @db.Uuid
+  schoolId      String?     @db.Uuid
+  action        AuditAction
+  resource      String
+  resourceId    String?
+  previousValue Json?
+  newValue      Json?
+  reason        String?
+  ip            String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([schoolId, createdAt])
+  @@index([userId, createdAt])
+  @@index([resource, resourceId])
+}
+
+// ---------- Notification ----------
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  schoolId  String?   @db.Uuid
+  title     String
+  body      String?
+  kind      String    @default("INFO")
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([schoolId, createdAt])
+}
+
+
+// ---------- LMS (Phase 10) ----------
+
+enum MaterialKind {
+  DOCUMENT
+  VIDEO
+  LINK
+  TEXT
+}
+
+model Course {
+  id          String   @id @default(uuid()) @db.Uuid
+  schoolId    String   @db.Uuid
+  subjectId   String   @db.Uuid
+  classId     String   @db.Uuid
+  teacherUserId String @db.Uuid
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  school     School      @relation(fields: [schoolId], references: [id])
+  subject    Subject     @relation(fields: [subjectId], references: [id])
+  class      Class       @relation(fields: [classId], references: [id])
+  materials  Material[]
+  assignments Assignment[]
+
+  @@unique([classId, subjectId])
+  @@index([schoolId])
+  @@index([teacherUserId])
+}
+
+model Material {
+  id        String       @id @default(uuid()) @db.Uuid
+  courseId  String       @db.Uuid
+  title     String
+  kind      MaterialKind @default(TEXT)
+  body      String?
+  fileUrl   String?
+  linkUrl   String?
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@index([courseId])
+}
+
+// ---------- Assignments (Phase 11) ----------
+
+enum AssignmentKind {
+  INDIVIDUAL
+  GROUP
+  ESSAY
+  PROJECT
+  PRACTICUM
+  PRESENTATION
+  PORTFOLIO
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  LATE
+  GRADED
+  RETURNED
+}
+
+model Assignment {
+  id         String         @id @default(uuid()) @db.Uuid
+  courseId   String         @db.Uuid
+  title      String
+  kind       AssignmentKind @default(INDIVIDUAL)
+  instructions String?
+  dueAt      DateTime?
+  maxScore   Decimal        @default(100) @db.Decimal(6, 2)
+  weight     Decimal        @default(1) @db.Decimal(5, 2)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  deletedAt  DateTime?
+
+  course     Course       @relation(fields: [courseId], references: [id])
+  submissions Submission[]
+
+  @@index([courseId])
+}
+
+model Submission {
+  id           String           @id @default(uuid()) @db.Uuid
+  assignmentId String           @db.Uuid
+  studentId    String           @db.Uuid
+  status       SubmissionStatus @default(DRAFT)
+  content      String?
+  fileUrl      String?
+  submittedAt  DateTime?
+  score        Decimal?         @db.Decimal(6, 2)
+  feedback     String?
+  gradedBy     String?          @db.Uuid
+  gradedAt     DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  student    Student    @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+}
+
+// ---------- Gradebook & Rapor (Phase 13) ----------
+
+enum GradeComponent {
+  ASSIGNMENT
+  QUIZ
+  EXAM
+  PROJECT
+  PRACTICUM
+  CUSTOM
+}
+
+enum GradeStatus {
+  DRAFT
+  SUBMITTED   // by teacher
+  APPROVED    // by homeroom/academic
+  PUBLISHED
+}
+
+model Grade {
+  id         String         @id @default(uuid()) @db.Uuid
+  schoolId   String         @db.Uuid
+  studentId  String         @db.Uuid
+  subjectId  String         @db.Uuid
+  semesterId String         @db.Uuid
+  component  GradeComponent
+  title      String?
+  score      Decimal        @db.Decimal(6, 2)
+  weight     Decimal        @default(1) @db.Decimal(5, 2)
+  status     GradeStatus    @default(DRAFT)
+  inputBy    String         @db.Uuid
+  approvedBy String?        @db.Uuid
+  approvedAt DateTime?
+  publishedAt DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  deletedAt  DateTime?
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@index([schoolId, semesterId])
+  @@index([studentId, subjectId, semesterId])
+}
+
+model ReportCard {
+  id          String      @id @default(uuid()) @db.Uuid
+  studentId   String      @db.Uuid
+  semesterId  String      @db.Uuid
+  status      GradeStatus @default(DRAFT)
+  summary     Json?       // per-subject final grades snapshot
+  attendance Json?       // attendance summary snapshot
+  notes       String?
+  verifyCode  String      @unique @default(uuid())
+  publishedAt DateTime?
+  generatedBy String?     @db.Uuid
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, semesterId])
+  @@index([semesterId])
+}
+
+// Merged into main schema via migration phase14_16_counseling_library_finance
+
+// ---------- BK & Student Wellbeing (Phase 14) ----------
+
+enum CounselingStatus {
+  REQUESTED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  REFERRED
+}
+
+/// Confidential. Read access audited (READ_SENSITIVE).
+model CounselingRecord {
+  id            String           @id @default(uuid()) @db.Uuid
+  schoolId      String           @db.Uuid
+  studentId     String           @db.Uuid
+  counselorUserId String         @db.Uuid
+  category      String           // AKADEMIK | KELUARGA | MENTAL | DISIPLIN | KARIR | LAIN
+  status        CounselingStatus @default(REQUESTED)
+  title         String
+  notes         String?          @db.Text // confidential notes
+  action        String?          @db.Text
+  followUpAt    DateTime?
+  referredTo    String?
+  parentMeetingAt DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([schoolId, status])
+  @@index([studentId])
+}
+
+// ---------- Library (Phase 15) ----------
+
+model Book {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  isbn      String?
+  title     String
+  author    String?
+  publisher String?
+  year      Int?
+  category  String?
+  rackCode  String?
+  coverUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school School      @relation(fields: [schoolId], references: [id])
+  copies BookCopy[]
+
+  @@index([schoolId, title])
+  @@index([isbn])
+}
+
+model BookCopy {
+  id          String   @id @default(uuid()) @db.Uuid
+  bookId      String   @db.Uuid
+  barcode     String   @unique
+  condition   String   @default("GOOD") // GOOD | DAMAGED | LOST
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  book  Book       @relation(fields: [bookId], references: [id])
+  loans BookLoan[]
+
+  @@index([bookId])
+}
+
+enum LoanStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+model BookLoan {
+  id         String     @id @default(uuid()) @db.Uuid
+  schoolId   String     @db.Uuid
+  copyId     String     @db.Uuid
+  studentId  String     @db.Uuid
+  status     LoanStatus @default(BORROWED)
+  borrowedAt DateTime   @default(now())
+  dueAt      DateTime
+  returnedAt DateTime?
+  fineAmount Decimal    @default(0) @db.Decimal(10, 2)
+  finePaid   Boolean    @default(false)
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+
+  copy    BookCopy @relation(fields: [copyId], references: [id])
+  student Student  @relation(fields: [studentId], references: [id])
+  school  School   @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, status])
+  @@index([studentId])
+}
+
+// ---------- Finance & Payment (Phase 16) ----------
+
+enum FeeKind {
+  SPP
+  DAFTAR_ULANG
+  KEGIATAN
+  SERAGAM
+  BUKU
+  CUSTOM
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+model FeeItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  schoolId   String   @db.Uuid
+  kind       FeeKind  @default(CUSTOM)
+  name       String
+  amount     Decimal  @db.Decimal(12, 2)
+  academicYearId String? @db.Uuid
+  gradeLevel Int?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  school    School     @relation(fields: [schoolId], references: [id])
+  invoices  Invoice[]
+
+  @@index([schoolId, kind])
+}
+
+model Invoice {
+  id         String        @id @default(uuid()) @db.Uuid
+  schoolId   String        @db.Uuid
+  studentId  String        @db.Uuid
+  feeItemId  String        @db.Uuid
+  number     String        @unique
+  amount     Decimal       @db.Decimal(12, 2)
+  discount   Decimal       @default(0) @db.Decimal(12, 2)
+  status     InvoiceStatus @default(UNPAID)
+  dueDate    DateTime?
+  period     String?       // e.g. "2026-07" for SPP
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+
+  school   School     @relation(fields: [schoolId], references: [id])
+  student  Student    @relation(fields: [studentId], references: [id])
+  feeItem  FeeItem    @relation(fields: [feeItemId], references: [id])
+  payments Payment[]
+
+  @@unique([studentId, feeItemId, period])
+  @@index([schoolId, status])
+  @@index([studentId])
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  PROVIDER // external payment gateway (abstraction)
+}
+
+model Payment {
+  id        String        @id @default(uuid()) @db.Uuid
+  invoiceId String        @db.Uuid
+  amount    Decimal       @db.Decimal(12, 2)
+  method    PaymentMethod @default(CASH)
+  reference String?
+  paidAt    DateTime      @default(now())
+  receivedBy String?      @db.Uuid
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+}
+
+// Merged into main schema via migration phase17_19_scholarship_asset_hr
+
+// ---------- Scholarship (Phase 17) ----------
+
+enum ScholarshipStatus {
+  APPLIED
+  VERIFIED
+  REVIEW
+  APPROVED
+  REJECTED
+}
+
+/// AI may recommend; final decision is human (status changes only via permissioned endpoint).
+model ScholarshipProgram {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String
+  period    String
+  criteria  Json?
+  quota     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school      School            @relation(fields: [schoolId], references: [id])
+  applications ScholarshipApplication[]
+
+  @@unique([schoolId, name, period])
+}
+
+model ScholarshipApplication {
+  id          String           @id @default(uuid()) @db.Uuid
+  programId   String           @db.Uuid
+  studentId   String           @db.Uuid
+  status      ScholarshipStatus @default(APPLIED)
+  documents   Json?
+  reviewNotes String?          @db.Text
+  decidedBy   String?          @db.Uuid
+  decidedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  program ScholarshipProgram @relation(fields: [programId], references: [id])
+  student Student            @relation(fields: [studentId], references: [id])
+
+  @@unique([programId, studentId])
+  @@index([status])
+}
+
+// ---------- Assets & Facility (Phase 18) ----------
+
+enum AssetCondition {
+  GOOD
+  NEEDS_REPAIR
+  DAMAGED
+  DISPOSED
+}
+
+model Asset {
+  id           String        @id @default(uuid()) @db.Uuid
+  schoolId     String        @db.Uuid
+  code         String        @unique
+  name         String
+  category     String        // ELECTRONIC | FURNITURE | VEHICLE | LAB | SPORT | OTHER
+  serialNumber String?
+  roomId       String?       @db.Uuid
+  condition    AssetCondition @default(GOOD)
+  purchaseDate DateTime?     @db.Date
+  value        Decimal?      @db.Decimal(14, 2)
+  vendor       String?
+  warrantyUntil DateTime?    @db.Date
+  qrPayload    String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  school      School          @relation(fields: [schoolId], references: [id])
+  room        Room?           @relation(fields: [roomId], references: [id])
+  maintenances AssetMaintenance[]
+
+  @@index([schoolId, category])
+  @@index([schoolId, condition])
+}
+
+model AssetMaintenance {
+  id          String   @id @default(uuid()) @db.Uuid
+  assetId     String   @db.Uuid
+  description String
+  scheduledAt DateTime?
+  completedAt DateTime?
+  cost        Decimal?  @db.Decimal(12, 2)
+  handledBy   String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  @@index([assetId])
+}
+
+// ---------- HR (Phase 19) ----------
+
+enum EmployeeKind {
+  TEACHER
+  STAFF
+}
+
+model Employee {
+  id            String       @id @default(uuid()) @db.Uuid
+  schoolId      String       @db.Uuid
+  userId        String?      @db.Uuid @unique
+  nip           String?      @unique
+  kind          EmployeeKind @default(TEACHER)
+  fullName      String
+  position      String?
+  department    String?
+  qualification String?
+  certification String?
+  joinedAt      DateTime?    @db.Date
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  school School        @relation(fields: [schoolId], references: [id])
+  leaves EmployeeLeave[]
+
+  @@index([schoolId, kind])
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model EmployeeLeave {
+  id         String      @id @default(uuid()) @db.Uuid
+  employeeId String      @db.Uuid
+  kind       String      // SICK | ANNUAL | PERMISSION | OTHER
+  fromDate   DateTime    @db.Date
+  toDate     DateTime    @db.Date
+  reason     String?
+  status     LeaveStatus @default(PENDING)
+  approvedBy String?     @db.Uuid
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([employeeId])
+}
+
+// Merged via migration phase20_22_ekskul_uks_transport_announcement
+
+// ---------- OSIS, Extracurricular & Achievement (Phase 20) ----------
+
+model Extracurricular {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String
+  kind      String   @default("CLUB") // CLUB | OSIS | TEAM
+  coachUserId String? @db.Uuid
+  schedule  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school   School            @relation(fields: [schoolId], references: [id])
+  members  ExtracurricularMember[]
+
+  @@unique([schoolId, name])
+}
+
+model ExtracurricularMember {
+  id                String   @id @default(uuid()) @db.Uuid
+  extracurricularId String   @db.Uuid
+  studentId         String   @db.Uuid
+  role              String?  // KETUA | SEKRETARIS | ANGGOTA
+  joinedAt          DateTime @default(now())
+  leftAt            DateTime?
+  deletedAt         DateTime?
+
+  extracurricular Extracurricular @relation(fields: [extracurricularId], references: [id])
+  student         Student         @relation(fields: [studentId], references: [id])
+
+  @@unique([extracurricularId, studentId])
+  @@index([studentId])
+}
+
+enum AchievementLevel {
+  SCHOOL
+  DISTRICT
+  PROVINCE
+  NATIONAL
+  INTERNATIONAL
+}
+
+model Achievement {
+  id          String           @id @default(uuid()) @db.Uuid
+  schoolId    String           @db.Uuid
+  studentId   String           @db.Uuid
+  title       String
+  type        String           // AKADEMIK | NON_AKADEMIK | OLAHRAGA | SENI
+  level       AchievementLevel @default(SCHOOL)
+  rank        Int?             // 1=Juara 1
+  year        Int
+  certificateUrl String?
+  verified    Boolean          @default(false)
+  verifiedBy  String?          @db.Uuid
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([schoolId, year])
+  @@index([studentId])
+}
+
+// ---------- UKS (Phase 21) ----------
+
+model UksVisit {
+  id            String   @id @default(uuid()) @db.Uuid
+  schoolId      String   @db.Uuid
+  studentId     String   @db.Uuid
+  visitAt       DateTime @default(now())
+  complaint     String
+  firstAid      String?
+  temperatureC  Decimal? @db.Decimal(4, 1)
+  bloodPressure String?
+  parentContacted Boolean @default(false)
+  referredTo    String?
+  notes         String?  @db.Text
+  recordedBy    String   @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([schoolId, visitAt])
+  @@index([studentId])
+}
+
+// ---------- Canteen (Phase 21) ----------
+
+model CanteenVendor {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school School        @relation(fields: [schoolId], references: [id])
+  menus  CanteenMenu[]
+
+  @@index([schoolId])
+}
+
+model CanteenMenu {
+  id        String   @id @default(uuid()) @db.Uuid
+  vendorId  String   @db.Uuid
+  name      String
+  price     Decimal  @db.Decimal(10, 2)
+  isAvailable Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  vendor CanteenVendor @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId])
+}
+
+// ---------- School Transport (Phase 21) ----------
+
+model Bus {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  plateNumber String @unique
+  capacity  Int
+  driverName String?
+  driverPhone String?
+  gpsDeviceId String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school School    @relation(fields: [schoolId], references: [id])
+  routes BusRoute[]
+
+  @@index([schoolId])
+}
+
+model BusRoute {
+  id        String   @id @default(uuid()) @db.Uuid
+  busId     String   @db.Uuid
+  name      String
+  stops     Json?    // [{name, time, lat, lng}]
+  departTime String? // "06:30"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  bus Bus @relation(fields: [busId], references: [id])
+
+  @@index([busId])
+}
+
+// ---------- Announcements (Phase 22) ----------
+
+model Announcement {
+  id        String    @id @default(uuid()) @db.Uuid
+  schoolId  String    @db.Uuid
+  title     String
+  body      String    @db.Text
+  audience  String    @default("ALL") // ALL | STUDENTS | PARENTS | TEACHERS
+  publishedAt DateTime?
+  createdBy String    @db.Uuid
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, publishedAt])
+}
+
+// Merged via migration phase23_24_iot_automation
+
+// ---------- IoT (Phase 23) ----------
+
+model Device {
+  id          String   @id @default(uuid()) @db.Uuid
+  schoolId    String   @db.Uuid
+  deviceId    String   @unique // external hardware id
+  name        String
+  kind        String   // SENSOR_TEMP | SENSOR_AIR | ENERGY | GPS | ACCESS | CCTV_HEALTH | OTHER
+  roomId      String?  @db.Uuid
+  assetId     String?  @db.Uuid
+  status      String   @default("OFFLINE") // ONLINE | OFFLINE | MAINTENANCE
+  battery     Int?
+  signal      Int?
+  firmware    String?
+  lastSeenAt  DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  school    School         @relation(fields: [schoolId], references: [id])
+  room      Room?          @relation(fields: [roomId], references: [id])
+  telemetry DeviceTelemetry[]
+
+  @@index([schoolId, status])
+  @@index([schoolId, kind])
+}
+
+model DeviceTelemetry {
+  id        String   @id @default(uuid()) @db.Uuid
+  deviceId  String   @db.Uuid
+  metric    String   // temperature | humidity | energy_kwh | lat | lng | ...
+  value     Decimal  @db.Decimal(14, 4)
+  unit      String?
+  recordedAt DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, recordedAt])
+}
+
+// ---------- Automation (Phase 24) ----------
+
+/// WHEN event (optionally IF condition) THEN action.
+/// Condition JSON: {metric: "temperature", op: ">", value: 38}
+model AutomationRule {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String
+  event     String   // e.g. student.absent | device.offline | sensor.threshold | book.overdue | payment.overdue
+  condition Json?
+  action    String   // notify_guardian | notify_role | notify_user | create_alert
+  actionConfig Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, event])
+}
+
+/// Fired events (audit + replay source).
+model EventLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String?  @db.Uuid
+  event     String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, event, createdAt])
+}
+
+/// Alerts produced by automation or thresholds (command center feed).
+model Alert {
+  id        String    @id @default(uuid()) @db.Uuid
+  schoolId  String    @db.Uuid
+  kind      String    // DEVICE_OFFLINE | SENSOR_THRESHOLD | MAINTENANCE_DUE | CUSTOM
+  severity  String    @default("INFO") // INFO | WARNING | CRITICAL
+  message   String
+  payload   Json?
+  resolvedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([schoolId, severity, createdAt])
+}
+
+// Workflow: Pendaftaran -> Dokumen -> Verifikasi -> Seleksi -> Pengumuman -> Daftar Ulang -> Siswa
+
+enum PpdbStatus {
+  REGISTERED
+  VERIFIED
+  SELECTED
+  ACCEPTED
+  REJECTED
+  ENROLLED // daftar ulang selesai, jadi siswa
+}
+
+model PpdbRegistration {
+  id          String     @id @default(uuid()) @db.Uuid
+  schoolId    String     @db.Uuid
+  regNumber   String     @unique
+  fullName    String
+  nisn        String?
+  gender      Gender
+  birthPlace  String?
+  birthDate   DateTime?  @db.Date
+  address     String?
+  phone       String?
+  parentName  String?
+  parentPhone String?
+  originSchool String?
+  status      PpdbStatus @default(REGISTERED)
+  verifiedBy  String?    @db.Uuid
+  verifiedAt  DateTime?
+  decidedBy   String?    @db.Uuid
+  decidedAt   DateTime?
+  enrolledStudentId String? @db.Uuid
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, status])
+  @@index([fullName])
+}
+
+// Merged via migration phase12_cbt
+
+enum QuestionType {
+  MC // multiple choice, single answer
+  MR // multiple response
+  TF // true/false
+  MATCH
+  SHORT
+  ESSAY
+}
+
+model Question {
+  id         String       @id @default(uuid()) @db.Uuid
+  schoolId   String       @db.Uuid
+  subjectId  String       @db.Uuid
+  type       QuestionType
+  text       String       @db.Text
+  options    Json?        // [{key, text}] for MC/MR/TF/MATCH
+  answer     Json?        // correct answer(s) — never sent to students
+  points     Decimal      @default(1) @db.Decimal(6, 2)
+  difficulty String       @default("MEDIUM") // EASY | MEDIUM | HARD
+  tags       String?
+  createdBy  String       @db.Uuid
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  deletedAt  DateTime?
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@index([schoolId, subjectId, difficulty])
+}
+
+enum ExamStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  ENDED
+}
+
+model Exam {
+  id           String     @id @default(uuid()) @db.Uuid
+  schoolId     String     @db.Uuid
+  classId      String     @db.Uuid
+  subjectId    String     @db.Uuid
+  title        String
+  status       ExamStatus @default(DRAFT)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  durationMin  Int        @default(60)
+  shuffleQuestions Boolean @default(false)
+  shuffleOptions   Boolean @default(false)
+  questionIds  Json?      // ordered list; shuffled per-attempt copy stored in session
+  createdBy    String     @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  school   School        @relation(fields: [schoolId], references: [id])
+  subject  Subject       @relation(fields: [subjectId], references: [id])
+  sessions ExamSession[]
+
+  @@index([schoolId, status])
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+model ExamSession {
+  id         String        @id @default(uuid()) @db.Uuid
+  examId     String        @db.Uuid
+  studentId  String        @db.Uuid
+  status     SessionStatus @default(IN_PROGRESS)
+  startedAt  DateTime      @default(now())
+  endsAt     DateTime      // startedAt + duration
+  submittedAt DateTime?
+  answers    Json?         // {questionId: answer} autosaved
+  score      Decimal?      @db.Decimal(8, 2)
+  gradedAt   DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+
+  exam    Exam    @relation(fields: [examId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@unique([examId, studentId])
+  @@index([studentId])
+}
+
+// Merged via migration phase22_public_site
+
+/// Public site content blocks. Only whitelisted fields exposed publicly.
+model SiteContent {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  section   String   // HOME | PROFILE | VISION | PROGRAMS | FACILITIES | NEWS | AGENDA | GALLERY | FAQ | CONTACT
+  title     String
+  body      String?  @db.Text
+  imageUrl  String?
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@unique([schoolId, section, title])
+  @@index([schoolId, section, published])
+}
+
+/// Public news posts.
+model NewsPost {
+  id        String    @id @default(uuid()) @db.Uuid
+  schoolId  String    @db.Uuid
+  slug      String    @unique
+  title     String
+  body      String    @db.Text
+  imageUrl  String?
+  publishedAt DateTime?
+  createdBy String    @db.Uuid
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, publishedAt])
+}

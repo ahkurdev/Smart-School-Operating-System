@@ -1,0 +1,22 @@
+{
+  "name": "smart-school-os",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @ssos/api dev & pnpm --filter @ssos/web dev",
+    "dev:api": "pnpm --filter @ssos/api dev",
+    "dev:web": "pnpm --filter @ssos/web dev",
+    "dev:worker": "pnpm --filter @ssos/worker dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @ssos/api db:migrate",
+    "db:deploy": "pnpm --filter @ssos/api db:deploy",
+    "db:seed": "pnpm --filter @ssos/api db:seed",
+    "db:studio": "pnpm --filter @ssos/api db:studio"
+  },
+  "enableBuildScripts": true
+}
