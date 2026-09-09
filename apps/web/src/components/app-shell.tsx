@@ -29,6 +29,8 @@ const NAV = [
   { href: '/ppdb', label: 'PPDB' },
   { href: '/scholarship', label: 'Beasiswa' },
   { href: '/ops', label: 'UKS Kantin Bus' },
+  { href: '/notifications', label: 'Notifikasi' },
+  { href: '/audit', label: 'Audit Log' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

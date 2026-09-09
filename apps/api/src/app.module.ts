@@ -37,6 +37,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter'
 import { LoggingMiddleware } from './common/middleware/logging.middleware'
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { AuditModule } from './audit/audit.module'
+import { NotificationsModule } from './notifications/notifications.module'
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { AuditModule } from './audit/audit.module'
     CbtModule,
     SiteModule,
     AuditModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [
