@@ -23,6 +23,12 @@ const NAV = [
   { href: '/assets', label: 'Aset' },
   { href: '/hr', label: 'Guru & Staf' },
   { href: '/ekskul', label: 'Ekskul' },
+  { href: '/iot', label: 'IoT & Otomasi' },
+  { href: '/site', label: 'Website' },
+  { href: '/users', label: 'Pengguna' },
+  { href: '/ppdb', label: 'PPDB' },
+  { href: '/scholarship', label: 'Beasiswa' },
+  { href: '/ops', label: 'UKS Kantin Bus' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

@@ -4,51 +4,33 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, ApiError } from '@/lib/api'
 
-export type PpdbStatus = 'REGISTERED' | 'VERIFIED' | 'SELECTED' | 'REJECTED' | 'ENROLLED'
-
-export interface PpdbRegistration {
+export interface PpdbReg {
   id: string
   regNumber: string
   fullName: string
   nisn: string | null
-  gender: 'MALE' | 'FEMALE'
-  status: PpdbStatus
-  originSchool: string | null
+  gender: string
+  birthPlace: string | null
+  birthDate: string | null
+  address: string | null
+  phone: string | null
   parentName: string | null
   parentPhone: string | null
+  originSchool: string | null
+  status: string
   createdAt: string
+  enrolledStudentId: string | null
 }
 
-export function usePpdbRegistrations(status?: string) {
-  const params = status ? `?status=${status}` : ''
+export function useRegistrations(status?: string) {
+  const q = status ? `?status=${status}` : ''
   return useQuery({
-    queryKey: ['ppdb', status ?? 'ALL'],
-    queryFn: () => api<{ items: PpdbRegistration[] }>(`/api/ppdb/registrations${params}`),
+    queryKey: ['ppdb', status ?? ''],
+    queryFn: () => api<{ items: PpdbReg[] }>(`/api/ppdb/registrations${q}`),
   })
 }
 
-export function useRegisterPpdb() {
-  const qc = useQueryClient()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  async function register(input: { fullName: string; gender: 'MALE' | 'FEMALE'; nisn?: string; originSchool?: string; parentName?: string; parentPhone?: string }): Promise<boolean> {
-    setLoading(true)
-    setError(null)
-    try {
-      await api('/api/ppdb/registrations', { method: 'POST', body: JSON.stringify(input) })
-      qc.invalidateQueries({ queryKey: ['ppdb'] })
-      return true
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Gagal mendaftar')
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }
-  return { register, loading, error }
-}
-
-export function useDecidePpdb() {
+export function useDecideReg() {
   const qc = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +42,7 @@ export function useDecidePpdb() {
       qc.invalidateQueries({ queryKey: ['ppdb'] })
       return true
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Gagal memproses')
+      setError(err instanceof ApiError ? err.message : 'Keputusan gagal')
       return false
     } finally {
       setLoading(false)
@@ -69,7 +51,7 @@ export function useDecidePpdb() {
   return { decide, loading, error }
 }
 
-export function useEnrollPpdb() {
+export function useEnrollReg() {
   const qc = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -82,7 +64,7 @@ export function useEnrollPpdb() {
       qc.invalidateQueries({ queryKey: ['students'] })
       return true
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Gagal daftar ulang')
+      setError(err instanceof ApiError ? err.message : 'Daftar ulang gagal')
       return false
     } finally {
       setLoading(false)

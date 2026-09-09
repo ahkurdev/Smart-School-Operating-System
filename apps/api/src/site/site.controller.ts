@@ -79,6 +79,30 @@ export class SiteController {
 
   // ---- Admin (auth) ----
 
+  @Get('content')
+  @RequirePermissions('site.manage')
+  async listContent(@CurrentUser() user: AuthUser) {
+    return {
+      items: await this.prisma.siteContent.findMany({
+        where: { schoolId: this.requireSchool(user), deletedAt: null },
+        orderBy: [{ section: 'asc' }, { order: 'asc' }],
+        take: 200,
+      }),
+    }
+  }
+
+  @Get('news')
+  @RequirePermissions('site.manage')
+  async listNews(@CurrentUser() user: AuthUser) {
+    return {
+      items: await this.prisma.newsPost.findMany({
+        where: { schoolId: this.requireSchool(user), deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }),
+    }
+  }
+
   @Post('content')
   @RequirePermissions('site.manage')
   async upsertContent(@CurrentUser() user: AuthUser, @Body() body: unknown) {
