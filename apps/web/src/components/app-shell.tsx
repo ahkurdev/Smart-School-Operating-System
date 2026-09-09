@@ -31,6 +31,8 @@ const NAV = [
   { href: '/ops', label: 'UKS Kantin Bus' },
   { href: '/notifications', label: 'Notifikasi' },
   { href: '/audit', label: 'Audit Log' },
+  { href: '/forms', label: 'Formulir' },
+  { href: '/reports', label: 'Laporan' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

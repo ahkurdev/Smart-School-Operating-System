@@ -12,7 +12,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
   WAKIL_KEPALA: ['school.read', 'student.read', 'attendance.read', 'grade.read', 'timetable.read', 'timetable.manage'],
   ADMIN_SEKOLAH: ['*'],
-  TATA_USAHA: ['student.read', 'student.create', 'student.update', 'document.read', 'document.manage'],
+  TATA_USAHA: ['student.read', 'student.create', 'student.update', 'document.read', 'document.manage', 'form.manage'],
   BENDAHARA: ['finance.read', 'finance.manage', 'student.read'],
   WALI_KELAS: ['student.read', 'attendance.read', 'attendance.manage', 'grade.read', 'grade.input', 'rapor.input'],
   GURU: ['student.read', 'attendance.read', 'attendance.manage', 'grade.read', 'grade.input', 'lms.manage', 'assignment.manage'],

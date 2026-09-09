@@ -38,6 +38,7 @@ import { LoggingMiddleware } from './common/middleware/logging.middleware'
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { AuditModule } from './audit/audit.module'
 import { NotificationsModule } from './notifications/notifications.module'
+import { FormsModule } from './forms/forms.module'
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { NotificationsModule } from './notifications/notifications.module'
     SiteModule,
     AuditModule,
     NotificationsModule,
+    FormsModule,
   ],
   controllers: [HealthController],
   providers: [

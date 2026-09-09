@@ -204,6 +204,7 @@ model School {
   exams         Exam[]
   siteContents  SiteContent[]
   newsPosts     NewsPost[]
+  forms         DynamicForm[]
 
   @@index([organizationId])
 }
@@ -1475,4 +1476,37 @@ model NewsPost {
   school School @relation(fields: [schoolId], references: [id])
 
   @@index([schoolId, publishedAt])
+}
+
+// ---------- Dynamic forms (Form Builder) ----------
+
+/// Admin-defined forms (PPDB custom, survei, izin, event). Schema JSON validated server-side.
+model DynamicForm {
+  id          String    @id @default(uuid()) @db.Uuid
+  schoolId    String    @db.Uuid
+  title       String
+  description String?
+  schema      Json      // { fields: [{ key, label, type, required, options? }] }
+  isActive    Boolean   @default(true)
+  createdBy   String    @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  school    School         @relation(fields: [schoolId], references: [id])
+  responses FormResponse[]
+
+  @@index([schoolId, isActive])
+}
+
+model FormResponse {
+  id          String    @id @default(uuid()) @db.Uuid
+  formId      String    @db.Uuid
+  submittedBy String?   @db.Uuid
+  answers     Json
+  createdAt   DateTime  @default(now())
+
+  form DynamicForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId, createdAt])
 }
