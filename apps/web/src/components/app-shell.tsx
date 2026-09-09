@@ -12,6 +12,7 @@ const NAV = [
   { href: '/timetable', label: 'Jadwal' },
   { href: '/announcements', label: 'Pengumuman' },
   { href: '/library', label: 'Perpustakaan' },
+  { href: '/parent', label: 'Portal Ortu' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

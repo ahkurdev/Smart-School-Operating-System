@@ -47,7 +47,35 @@ export interface ChildInvoice {
 export function useChildInvoices(studentId: string | undefined) {
   return useQuery({
     queryKey: ['child-invoices', studentId],
-    queryFn: () => api<{ items: ChildInvoice[] }>(`/api/finance/invoices?studentId=${studentId}`),
+    queryFn: () => api<{ items: (ChildInvoice & { paid: number; due: number })[]; totalDue: number }>(`/api/parent/children/${studentId}/invoices`),
+    enabled: !!studentId,
+  })
+}
+
+export interface ChildGradeFinal {
+  subject: string
+  final: number
+}
+
+export function useChildGrades(studentId: string | undefined) {
+  return useQuery({
+    queryKey: ['child-grades', studentId],
+    queryFn: () => api<{ grades: unknown[]; finals: ChildGradeFinal[] }>(`/api/parent/children/${studentId}/grades`),
+    enabled: !!studentId,
+  })
+}
+
+export interface ChildReportCard {
+  id: string
+  verifyCode: string
+  publishedAt: string | null
+  summary: unknown
+}
+
+export function useChildReportCards(studentId: string | undefined) {
+  return useQuery({
+    queryKey: ['child-rapors', studentId],
+    queryFn: () => api<{ items: ChildReportCard[] }>(`/api/parent/children/${studentId}/report-cards`),
     enabled: !!studentId,
   })
 }

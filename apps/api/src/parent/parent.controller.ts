@@ -1,9 +1,10 @@
-import { BadRequestException, Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { PermissionsGuard } from '../common/guards/permissions.guard'
 import { RequirePermissions } from '../common/decorators/permissions.decorator'
 import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator'
 import { PrismaService } from '../prisma/prisma.service'
+import * as argon2 from 'argon2'
 import { z } from 'zod'
 
 const inviteSchema = z.object({
@@ -36,12 +37,17 @@ export class ParentController {
 
   /// Child attendance in date range (default: last 30 days).
   @Get('children/:studentId/attendance')
-  async childAttendance(@CurrentUser() user: AuthUser, @Param('studentId', ParseUUIDPipe) studentId: string) {
+  async childAttendance(
+    @CurrentUser() user: AuthUser,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+    @Query('from') fromQ?: string,
+    @Query('to') toQ?: string,
+  ) {
     await this.assertMyChild(user, studentId)
-    const to = new Date()
-    to.setHours(23, 59, 59, 999)
-    const from = new Date(Date.now() - 30 * 24 * 3600 * 1000)
-    from.setHours(0, 0, 0, 0)
+    const to = toQ ? new Date(toQ + 'T23:59:59.999Z') : new Date()
+    if (!toQ) to.setHours(23, 59, 59, 999)
+    const from = fromQ ? new Date(fromQ + 'T00:00:00.000Z') : new Date(Date.now() - 30 * 24 * 3600 * 1000)
+    if (!fromQ) from.setHours(0, 0, 0, 0)
     const records = await this.prisma.attendance.findMany({
       where: { schoolId: user.memberships[0]?.schoolId ?? '', personId: studentId, personKind: 'STUDENT', date: { gte: from, lte: to } },
       select: { date: true, status: true, note: true },
@@ -89,6 +95,26 @@ export class ParentController {
     }
   }
 
+  /// Child invoices + payments (parent sees billing for own child only).
+  @Get('children/:studentId/invoices')
+  async childInvoices(@CurrentUser() user: AuthUser, @Param('studentId', ParseUUIDPipe) studentId: string) {
+    await this.assertMyChild(user, studentId)
+    const invoices = await this.prisma.invoice.findMany({
+      where: { studentId, deletedAt: null },
+      select: {
+        id: true, number: true, amount: true, discount: true, status: true, period: true,
+        feeItem: { select: { name: true } },
+        payments: { where: { deletedAt: null }, select: { amount: true, method: true, paidAt: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    const items = invoices.map((inv) => {
+      const paid = inv.payments.reduce((s, p) => s + Number(p.amount), 0)
+      return { ...inv, paid, due: Math.max(0, Number(inv.amount) - Number(inv.discount) - paid) }
+    })
+    return { items, totalDue: items.reduce((s, i) => s + i.due, 0) }
+  }
+
   /// Admin/operator: link a parent user to a student (creates user if needed).
   @Post('link')
   @RequirePermissions('student.update')
@@ -104,8 +130,8 @@ export class ParentController {
 
     // find or create parent user
     let parent = await this.prisma.user.findFirst({ where: { email: data.email.toLowerCase(), deletedAt: null } })
+    let created = false
     if (!parent) {
-      const { argon2 } = await import('argon2')
       parent = await this.prisma.user.create({
         data: {
           email: data.email.toLowerCase(),
@@ -113,6 +139,7 @@ export class ParentController {
           fullName: data.fullName,
         },
       })
+      created = true
     }
     const dup = await this.prisma.guardian.findFirst({ where: { userId: parent.id, studentId: data.studentId, deletedAt: null } })
     if (dup) throw new BadRequestException('Parent already linked')
@@ -125,7 +152,7 @@ export class ParentController {
       update: {},
       create: { userId: parent.id, schoolId, role: 'ORTU' },
     })
-    return { guardianId: guardian.id, parentUserId: parent.id, created: !dup }
+    return { guardianId: guardian.id, parentUserId: parent.id, created }
   }
 
   private async assertMyChild(user: AuthUser, studentId: string): Promise<void> {
