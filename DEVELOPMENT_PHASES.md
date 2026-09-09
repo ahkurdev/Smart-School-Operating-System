@@ -4,7 +4,8 @@
 - [x] Phase 2  Auth, Multi School & Security (JWT, refresh rotation, sessions, RBAC, tenant isolation tests)
 - [x] Phase 3  School Master Data
 - [x] Phase 4  Student Information System
-- [x] Phase 5  Parent & Guardian Portal (API: guardian links, child invoices/outstanding)
+- [x] Phase 5  Parent & Guardian Portal (API: guardian links, child invoices/outstanding; UI: /parent + /student self-service)
+- [x] UI layer: /dashboard /students /attendance /timetable /announcements /finance /library(+loans) /lms /cbt /grades /counseling /assets /hr /ekskul /ppdb /scholarship /ops /iot(+rules) /site /users /notifications /audit /forms /reports /integrations /command-center /student /parent + global search (Ctrl+K) + PWA manifest
 - [x] Phase 6  PPDB
 - [x] Phase 7  Academic & Class Management
 - [x] Phase 8  Smart Timetable
