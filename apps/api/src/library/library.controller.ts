@@ -72,6 +72,21 @@ export class LibraryController {
     return book
   }
 
+  @Get('books/:id/copies')
+  @RequirePermissions('library.read')
+  async listCopies(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    const schoolId = this.requireSchool(user)
+    const book = await this.prisma.book.findFirst({ where: { id, schoolId, deletedAt: null } })
+    if (!book) throw new BadRequestException('Book not found')
+    return {
+      items: await this.prisma.bookCopy.findMany({
+        where: { bookId: id, deletedAt: null },
+        select: { id: true, barcode: true, condition: true, isAvailable: true },
+        orderBy: { barcode: 'asc' },
+      }),
+    }
+  }
+
   @Post('loans')
   @RequirePermissions('library.manage')
   async borrow(@CurrentUser() user: AuthUser, @Body() body: unknown) {

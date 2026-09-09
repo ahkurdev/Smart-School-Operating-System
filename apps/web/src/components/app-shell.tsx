@@ -17,6 +17,8 @@ const NAV = [
   { href: '/ppdb', label: 'PPDB' },
   { href: '/grades', label: 'Nilai' },
   { href: '/student', label: 'Portal Siswa' },
+  { href: '/lms', label: 'E-Learning' },
+  { href: '/cbt', label: 'Ujian CBT' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

@@ -109,6 +109,27 @@ export class CbtController {
     return exam
   }
 
+  @Get('exams')
+  @RequirePermissions('cbt.manage')
+  async listExams(@CurrentUser() user: AuthUser, @Query('status') status?: string) {
+    const schoolId = this.requireSchool(user)
+    const exams = await this.prisma.exam.findMany({
+      where: { schoolId, deletedAt: null, ...(status ? { status: status as never } : {}) },
+      include: {
+        subject: { select: { name: true } },
+        _count: { select: { sessions: { where: { deletedAt: null } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    })
+    const classes = await this.prisma.class.findMany({
+      where: { id: { in: exams.map((e) => e.classId) } },
+      select: { id: true, name: true },
+    })
+    const byId = new Map(classes.map((c) => [c.id, c.name]))
+    return { items: exams.map((e) => ({ ...e, class: { name: byId.get(e.classId) ?? '-' } })) }
+  }
+
   @Post('exams/:id/start')
   @RequirePermissions('cbt.manage')
   async startExam(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
