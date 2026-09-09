@@ -25,7 +25,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   OPERATOR_PPDB: ['ppdb.read', 'ppdb.manage', 'ppdb.verify', 'student.create'],
   SECURITY: ['visitor.read', 'visitor.manage', 'incident.read', 'incident.manage'],
   SARPRAS: ['asset.read', 'asset.manage', 'facility.read', 'facility.manage', 'maintenance.manage'],
-  SISWA: ['self.read', 'lms.learn', 'assignment.submit', 'library.search'],
+  SISWA: ['self.read', 'lms.learn', 'assignment.submit', 'library.search', 'cbt.take'],
   ORTU: ['child.read', 'child.attendance.read', 'child.grade.read', 'child.finance.read', 'child.rapor.read'],
   ALUMNI: ['self.read', 'alumni.self'],
   AUDITOR: ['audit.read', 'report.read'],

@@ -26,6 +26,8 @@ import { CommandCenterModule } from './command-center/command-center.module'
 import { SearchModule } from './search/search.module'
 import { PpdbModule } from './ppdb/ppdb.module'
 import { ParentModule } from './parent/parent.module'
+import { StudentModule } from './student/student.module'
+import { UsersModule } from './users/users.module'
 import { CbtModule } from './cbt/cbt.module'
 import { SiteModule } from './site/site.module'
 import { HealthController } from './health/health.controller'
@@ -65,6 +67,8 @@ import { AuditModule } from './audit/audit.module'
     SearchModule,
     PpdbModule,
     ParentModule,
+    StudentModule,
+    UsersModule,
     CbtModule,
     SiteModule,
     AuditModule,
