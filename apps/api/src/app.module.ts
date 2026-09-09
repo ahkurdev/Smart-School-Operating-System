@@ -39,6 +39,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { AuditModule } from './audit/audit.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { FormsModule } from './forms/forms.module'
+import { IntegrationsModule } from './integrations/integrations.module'
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { FormsModule } from './forms/forms.module'
     AuditModule,
     NotificationsModule,
     FormsModule,
+    IntegrationsModule,
   ],
   controllers: [HealthController],
   providers: [

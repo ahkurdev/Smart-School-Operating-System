@@ -33,6 +33,7 @@ const NAV = [
   { href: '/audit', label: 'Audit Log' },
   { href: '/forms', label: 'Formulir' },
   { href: '/reports', label: 'Laporan' },
+  { href: '/integrations', label: 'Integrasi' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
