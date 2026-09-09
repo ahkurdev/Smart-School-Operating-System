@@ -90,6 +90,23 @@ export class HrController {
     })
   }
 
+  @Get('leaves')
+  @RequirePermissions('hr.manage')
+  async listLeaves(@CurrentUser() user: AuthUser, @Query('status') status?: string) {
+    return {
+      items: await this.prisma.employeeLeave.findMany({
+        where: {
+          deletedAt: null,
+          ...(status ? { status: status as never } : {}),
+          employee: { schoolId: this.requireSchool(user), deletedAt: null },
+        },
+        include: { employee: { select: { fullName: true, nip: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }),
+    }
+  }
+
   @Post('leave/:leaveId/decide')
   @RequirePermissions('hr.manage')
   async decideLeave(@CurrentUser() user: AuthUser, @Param('leaveId', ParseUUIDPipe) leaveId: string, @Body() body: { action: 'APPROVE' | 'REJECT' }) {

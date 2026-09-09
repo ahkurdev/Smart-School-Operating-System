@@ -19,6 +19,10 @@ const NAV = [
   { href: '/student', label: 'Portal Siswa' },
   { href: '/lms', label: 'E-Learning' },
   { href: '/cbt', label: 'Ujian CBT' },
+  { href: '/counseling', label: 'BK' },
+  { href: '/assets', label: 'Aset' },
+  { href: '/hr', label: 'Guru & Staf' },
+  { href: '/ekskul', label: 'Ekskul' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
