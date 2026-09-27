@@ -1,0 +1,106 @@
+# Roadmap - Smart School Operating System
+
+100 phases, executed in order, each with a Definition of Done (code, typecheck,
+tests, permissions, states, responsive, a11y, docs). Status legend:
+`[x]` done, `[~]` in progress, `[ ]` pending.
+
+- [x] 1. Repository discovery, environment audit, requirement normalization
+- [x] 2. Anti-Slop installation and agent rules
+- [x] 3. Architecture Decision Records and modular monolith architecture
+- [x] 4. Technology bootstrap
+- [x] 5. DESIGN.md and design tokens
+- [x] 6. Database architecture and tenant strategy
+- [x] 7. Prisma setup and initial migration
+- [~] 8. Authentication foundation
+- [ ] 9. RBAC and policy engine
+- [ ] 10. Tenant/campus administration
+- [ ] 11. User management
+- [ ] 12. Student data model
+- [ ] 13. Teacher/staff model
+- [ ] 14. Guardian model
+- [ ] 15. Academic year/term structure
+- [ ] 16. Grade/class structure
+- [ ] 17. Subject/curriculum structure
+- [ ] 18. Admin shell/navigation
+- [ ] 19. Global search/command palette
+- [ ] 20. Student management UI/API
+- [ ] 21. Teacher management
+- [ ] 22. Guardian relationship system
+- [ ] 23. Enrollment engine
+- [ ] 24. Public website foundation
+- [ ] 25. CMS foundation
+- [ ] 26. CMS editor
+- [ ] 27. Media management
+- [ ] 28. Public pages
+- [ ] 29. News/events/gallery
+- [ ] 30. SEO/public metadata
+- [ ] 31. PPDB architecture
+- [ ] 32. Admission periods/tracks
+- [ ] 33. Dynamic admission forms
+- [ ] 34. Applicant portal
+- [ ] 35. PPDB document upload
+- [ ] 36. Admin verification
+- [ ] 37. Admission scoring/workflow
+- [ ] 38. Acceptance/rejection
+- [ ] 39. Applicant -> student conversion
+- [ ] 40. PPDB final E2E verification
+- [ ] 41. Attendance domain
+- [ ] 42. Attendance session
+- [ ] 43. Student digital identity card
+- [ ] 44. Dynamic rotating QR
+- [ ] 45. Teacher QR scanner
+- [ ] 46. Attendance confirmation
+- [ ] 47. Replay/fraud protection
+- [ ] 48. Manual attendance/override
+- [ ] 49. Attendance reporting
+- [ ] 50. Attendance E2E security test
+- [ ] 51. Timetable data model
+- [ ] 52. Manual timetable editor
+- [ ] 53. Collision validation
+- [ ] 54. Automatic scheduling foundation
+- [ ] 55. Calendar
+- [ ] 56. Teacher dashboard
+- [ ] 57. Student dashboard
+- [ ] 58. Parent dashboard
+- [ ] 59. Assignment module
+- [ ] 60. Learning materials
+- [ ] 61. Assessment model
+- [ ] 62. Gradebook
+- [ ] 63. Grade workflow
+- [ ] 64. Report cards
+- [ ] 65. Exam management
+- [ ] 66. Announcements
+- [ ] 67. Notification architecture
+- [ ] 68. Messaging safeguards
+- [ ] 69. Library
+- [ ] 70. Digital library
+- [ ] 71. Finance billing
+- [ ] 72. Payments
+- [ ] 73. Assets
+- [ ] 74. Facility booking
+- [ ] 75. Extracurricular
+- [ ] 76. Achievements
+- [ ] 77. Counseling
+- [ ] 78. Discipline
+- [ ] 79. Secure documents
+- [ ] 80. Import/export
+- [ ] 81. Reporting engine
+- [ ] 82. Analytics
+- [ ] 83. Academic risk indicators
+- [ ] 84. AI provider abstraction
+- [ ] 85. AI tool permission system
+- [ ] 86. AI admin assistant
+- [ ] 87. AI teacher assistant
+- [ ] 88. AI student assistant
+- [ ] 89. AI security/audit
+- [ ] 90. API/integrations
+- [ ] 91. Webhooks/background jobs
+- [ ] 92. Caching/performance
+- [ ] 93. Security hardening
+- [ ] 94. Privacy/audit/retention
+- [ ] 95. Comprehensive automated tests
+- [ ] 96. Accessibility/responsive audit
+- [ ] 97. Browser/performance audit
+- [ ] 98. CI/CD/deployment/backup
+- [ ] 99. Full system audit and remediation
+- [ ] 100. Production readiness verification and final release

@@ -1,0 +1,30 @@
+# ---- ignored artifacts ----
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# ---- local dev database (portable postgres, never committed) ----
+.pgsql/
+.pgdata/
+
+# ---- env & secrets ----
+.env
+.env.local
+.env.*.local
+*.pem
+
+# ---- test artifacts ----
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ---- misc ----
+.DS_Store
+Thumbs.db
+*.log
+.vercel
