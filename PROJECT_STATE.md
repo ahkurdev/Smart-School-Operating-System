@@ -6,9 +6,9 @@
 
 | Field | Value |
 |---|---|
-| Current phase | 58 completed; starting 59 (assignments) |
-| Phases completed | 1-58, plus storage abstraction (71 lead-in) |
-| Next phase | 59 - Assignment module |
+| Current phase | 65 completed; starting 66 (report cards) |
+| Phases completed | 1-65, plus storage abstraction (71 lead-in) |
+| Next phase | 66 - Report cards |
 | Build state | production build green (54 routes), lint clean, typecheck clean |
 | Tests | QR security (10), tenant isolation (7) via `npm run verify`; manual browser E2E |
 
@@ -78,6 +78,9 @@
   collision detection, class grid editor. Test: 9 checks. DONE
 - Phases 56-58 Role-aware dashboards: teacher / student / parent landing
   panels from live data. DONE
+- Phases 59-65 Assignments, materials, gradebook: submissions with enrolment
+  + publish gating, weighted averages, DRAFT->SUBMITTED->APPROVED->PUBLISHED
+  workflow. Test: 18 checks. DONE
 
 ## Next up (Phase 59)
 

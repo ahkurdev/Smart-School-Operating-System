@@ -49,6 +49,9 @@ export const ADMIN_NAV: NavGroup[] = [
       { label: "Assignments", href: "/app/assignments", permission: "assignment.read" },
       { label: "Materials", href: "/app/materials", permission: "material.read" },
       { label: "Grades", href: "/app/grades", permission: "grade.read" },
+      { label: "Report cards", href: "/app/report-cards", permission: "grade.read_own" },
+      { label: "Announcements", href: "/app/announcements", permission: "announcement.read" },
+      { label: "Finance", href: "/app/finance", permission: "finance.read" },
     ],
   },
   {

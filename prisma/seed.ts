@@ -742,6 +742,68 @@ async function main() {
     }
   }
 
+  // --- Communication & finance: a published announcement + one invoice -----
+  await prisma.announcement.upsert({
+    where: { id: "demo-announcement-1" },
+    create: {
+      id: "demo-announcement-1",
+      tenantId,
+      title: "Welcome to the new school year",
+      body: "Term 1 begins Monday. Please arrive by 07:00 in full uniform.",
+      audience: "ALL",
+      priority: "NORMAL",
+      status: "PUBLISHED",
+      publishAt: new Date(),
+      authorUserId: null,
+    },
+    update: {},
+  });
+
+  await prisma.announcement.upsert({
+    where: { id: "demo-announcement-2" },
+    create: {
+      id: "demo-announcement-2",
+      tenantId,
+      title: "Draft: Parent-teacher evening",
+      body: "Save the date — details to follow.",
+      audience: "PARENTS",
+      priority: "LOW",
+      status: "DRAFT",
+    },
+    update: {},
+  });
+
+  if (studentIds[0]) {
+    const invNo = `INV-${new Date().getFullYear()}-0001`;
+    const existingInv = await prisma.invoice.findFirst({ where: { tenantId, invoiceNumber: invNo }, select: { id: true } });
+    if (!existingInv) {
+      await prisma.invoice.create({
+        data: {
+          tenantId,
+          studentId: studentIds[0],
+          academicYearId: year.id,
+          invoiceNumber: invNo,
+          dueDate: new Date(Date.now() + 14 * 24 * 3600 * 1000),
+          subtotal: 5000000,
+          discount: 0,
+          total: 5000000,
+          paidAmount: 2000000,
+          currency: "IDR",
+          status: "PARTIAL",
+          items: {
+            create: [
+              { tenantId, description: "Tuition (Term 1)", quantity: 1, amount: 4500000 },
+              { tenantId, description: "Activity fee", quantity: 1, amount: 500000 },
+            ],
+          },
+          payments: {
+            create: { tenantId, amount: 2000000, method: "BANK_TRANSFER", reference: "TRF-0001", status: "COMPLETED" },
+          },
+        },
+      });
+    }
+  }
+
   console.log("\nSeed complete.");
   console.log("---------------------------------------------");
   console.log("Demo school slug:", DEMO_SLUG);

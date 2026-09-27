@@ -62,13 +62,13 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 56. Teacher dashboard
 - [x] 57. Student dashboard
 - [x] 58. Parent dashboard
-- [ ] 59. Assignment module
-- [ ] 60. Learning materials
-- [ ] 61. Assessment model
-- [ ] 62. Gradebook
-- [ ] 63. Grade workflow
-- [ ] 64. Report cards
-- [ ] 65. Exam management
+- [x] 59. Assignment module
+- [x] 60. Learning materials
+- [x] 61. Assessment model
+- [x] 62. Gradebook
+- [x] 63. Grade workflow
+- [x] 64. Report cards
+- [x] 65. Exam management
 - [ ] 66. Announcements
 - [ ] 67. Notification architecture
 - [ ] 68. Messaging safeguards
