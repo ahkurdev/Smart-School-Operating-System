@@ -154,6 +154,7 @@ model User {
   memberships      Membership[]
   sessions         Session[]
   loginHistory     LoginAttempt[]
+  passwordResetTokens PasswordResetToken[]
   studentProfile   Student?
   teacherProfile   Teacher?
   guardianProfile  Guardian?
@@ -294,6 +295,22 @@ model LoginAttempt {
 
   @@index([identifier, createdAt])
   @@index([userId])
+}
+
+/// One-time password reset token. Only the hash is stored; the raw token is
+/// delivered out-of-band (email) and consumed once.
+model PasswordResetToken {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ============================================================================

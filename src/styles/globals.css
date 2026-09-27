@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens. HSL channel values consumed by Tailwind (see tailwind.config.ts).
+ * Light and dark are both first-class (DESIGN.md: two verified faces).
+ *
+ * Color roles (DESIGN.md): Ink (foreground), Paper (background), Core (primary
+ * teal), Accent (amber), plus functional status colours. Palette cap: 2 core
+ * roles + 1 accent.
+ *
+ * Surface hierarchy: sunken (dense panes), base (page), raised (overlays).
+ */
+
+@layer base {
+  :root {
+    /* Paper / Ink */
+    --background: 40 20% 98%;          /* warm grey-white, not pure white */
+    --foreground: 220 18% 12%;         /* near-black slate */
+
+    --surface: 40 18% 99%;
+    --surface-raised: 0 0% 100%;
+    --surface-sunken: 40 16% 95%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 18% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 18% 12%;
+
+    /* Core: deep teal-green */
+    --primary: 173 80% 26%;
+    --primary-foreground: 40 30% 98%;
+
+    /* Secondary: quiet neutral surface tone */
+    --secondary: 40 14% 93%;
+    --secondary-foreground: 220 16% 20%;
+
+    --muted: 40 14% 94%;
+    --muted-foreground: 220 10% 42%;
+
+    /* Accent: warm amber (single most important action per screen) */
+    --accent: 32 90% 45%;
+    --accent-foreground: 40 40% 99%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 40% 99%;
+
+    --success: 152 60% 32%;
+    --success-foreground: 150 40% 98%;
+    --warning: 32 90% 45%;
+    --warning-foreground: 40 40% 99%;
+    --info: 215 45% 42%;
+    --info-foreground: 210 40% 98%;
+
+    --border: 220 12% 88%;
+    --input: 220 12% 86%;
+    --ring: 173 80% 30%;
+
+    --radius: 10px; /* panel radius; controls use radius - 4 = 6px */
+  }
+
+  .dark {
+    /* Deep slate, not pure black; warm off-white ink */
+    --background: 220 22% 9%;
+    --foreground: 40 20% 94%;
+
+    --surface: 220 20% 11%;
+    --surface-raised: 220 18% 14%;
+    --surface-sunken: 220 24% 7%;
+
+    --card: 220 20% 11%;
+    --card-foreground: 40 20% 94%;
+    --popover: 220 18% 13%;
+    --popover-foreground: 40 20% 94%;
+
+    --primary: 173 64% 44%;
+    --primary-foreground: 220 30% 8%;
+
+    --secondary: 220 14% 18%;
+    --secondary-foreground: 40 16% 92%;
+
+    --muted: 220 14% 18%;
+    --muted-foreground: 220 10% 64%;
+
+    --accent: 32 88% 52%;
+    --accent-foreground: 30 40% 10%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 40% 98%;
+
+    --success: 152 45% 44%;
+    --success-foreground: 150 40% 98%;
+    --warning: 32 88% 52%;
+    --warning-foreground: 30 40% 10%;
+    --info: 215 50% 60%;
+    --info-foreground: 220 30% 10%;
+
+    --border: 220 14% 22%;
+    --input: 220 14% 24%;
+    --ring: 173 64% 48%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    font-variant-ligatures: contextual;
+  }
+
+  /* Focus: a single visible ring, never removed (WCAG 2.2 AA). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Numerals align in tables, grades, and times. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The ruled-column motif (DESIGN.md): a hairline vertical rule beside a label. */
+  .ruled {
+    border-left: 1px solid hsl(var(--border));
+    padding-left: 0.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}

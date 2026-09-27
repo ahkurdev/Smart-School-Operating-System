@@ -1,0 +1,487 @@
+/**
+ * Development seed. Creates a clearly-labelled demo school with staff, students,
+ * guardians, academic structure, and sample communications so every screen has
+ * real data to show. All names/emails are obviously synthetic (demo.*). Never run
+ * this against production.
+ *
+ * Idempotent: safe to re-run. Passwords come from SEED_PASSWORD or default.
+ */
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
+
+const prisma = new PrismaClient();
+
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "DemoPass123!";
+const DEMO_SLUG = process.env.SEED_TENANT_SLUG ?? "demo-school";
+
+function pick<T>(arr: T[], i: number): T {
+  return arr[i % arr.length]!;
+}
+
+async function main() {
+  console.log("Seeding demo data...");
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12);
+
+  // --- Permission catalog + roles -----------------------------------------
+  // Imported lazily so the seed can be run with tsx without path aliases.
+  const { syncPermissionCatalog, materialisePlatformRoles, materialiseTenantRoles } =
+    await import("../src/server/services/rbac.service");
+
+  await syncPermissionCatalog();
+  await materialisePlatformRoles();
+
+  // --- Platform super admin ------------------------------------------------
+  const superAdmin = await prisma.user.upsert({
+    where: { email: "superadmin@demo.local" },
+    create: {
+      email: "superadmin@demo.local",
+      fullName: "Platform Super Admin",
+      passwordHash,
+      status: "ACTIVE",
+      emailVerified: new Date(),
+    },
+    update: {},
+    select: { id: true },
+  });
+  {
+    const role = await prisma.role.findFirst({
+      where: { tenantId: null, key: "super_admin" },
+      select: { id: true },
+    });
+    if (role) {
+      // Platform membership: a special membership with no tenant is not modelled,
+      // so platform roles are granted via a synthetic membership? Instead, grant
+      // super_admin to the user on every tenant created here. Simplest correct
+      // approach: platform admin is recognised by holding super_admin on any
+      // membership; we also record a dedicated platform membership below.
+    }
+  }
+
+  // --- Tenant (school) -----------------------------------------------------
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: DEMO_SLUG },
+    create: {
+      slug: DEMO_SLUG,
+      name: "Demo International School",
+      legalName: "Demo International School Foundation",
+      type: "SCHOOL",
+      timezone: "Asia/Jakarta",
+      locale: "en",
+      currency: "IDR",
+      primaryColor: "#0f766e",
+      gradeLabel: "Grade",
+      classLabel: "Class",
+      studentIdLabel: "Student ID",
+      academicTermsPerYear: 2,
+    },
+    update: {},
+    select: { id: true, name: true },
+  });
+  const tenantId = tenant.id;
+  await materialiseTenantRoles(tenantId);
+
+  const roleId = async (key: string) => {
+    const r = await prisma.role.findFirst({
+      where: { tenantId, key },
+      select: { id: true },
+    });
+    if (!r) throw new Error(`role ${key} missing`);
+    return r.id;
+  };
+
+  // Grant the super admin the school_owner role in the demo tenant AND record a
+  // platform-admin marker so `buildActor` recognises cross-tenant authority.
+  {
+    const ownerRole = await prisma.role.findFirst({
+      where: { tenantId, key: "school_owner" },
+      select: { id: true },
+    });
+    const superRole = await prisma.role.findFirst({
+      where: { tenantId: null, key: "super_admin" },
+      select: { id: true },
+    });
+    const membership = await prisma.membership.upsert({
+      where: { tenantId_userId: { tenantId, userId: superAdmin.id } },
+      create: { tenantId, userId: superAdmin.id, status: "ACTIVE", title: "Platform Super Admin" },
+      update: {},
+      select: { id: true },
+    });
+    for (const rid of [ownerRole?.id, superRole?.id]) {
+      if (rid) {
+        await prisma.userRole.upsert({
+          where: { membershipId_roleId: { membershipId: membership.id, roleId: rid } },
+          create: { membershipId: membership.id, roleId: rid },
+          update: {},
+        });
+      }
+    }
+  }
+
+  // --- Campus --------------------------------------------------------------
+  const campus = await prisma.campus.upsert({
+    where: { tenantId_code: { tenantId, code: "MAIN" } },
+    create: {
+      tenantId,
+      code: "MAIN",
+      name: "Main Campus",
+      isPrimary: true,
+      city: "Demo City",
+      country: "Demo Land",
+      timezone: "Asia/Jakarta",
+    },
+    update: {},
+    select: { id: true },
+  });
+
+  // --- Users + memberships (staff) ----------------------------------------
+  type StaffSeed = { email: string; name: string; role: string; title: string };
+  const staffSeeds: StaffSeed[] = [
+    { email: "principal@demo.local", name: "Dr. Amara Okafor", role: "principal", title: "Principal" },
+    { email: "admin@demo.local", name: "Budi Santoso", role: "school_admin", title: "School Administrator" },
+    { email: "academic@demo.local", name: "Siti Rahmawati", role: "academic_admin", title: "Academic Coordinator" },
+    { email: "admissions@demo.local", name: "Kwame Mensah", role: "admission_admin", title: "Admissions Officer" },
+    { email: "finance@demo.local", name: "Lucia Fernandes", role: "finance_admin", title: "Finance Officer" },
+    { email: "librarian@demo.local", name: "Nadia Haddad", role: "librarian", title: "Librarian" },
+    { email: "counselor@demo.local", name: "Elena Rossi", role: "counselor", title: "Counselor" },
+  ];
+
+  const staffUsers: { id: string; email: string }[] = [];
+  for (const s of staffSeeds) {
+    const user = await prisma.user.upsert({
+      where: { email: s.email },
+      create: {
+        email: s.email,
+        fullName: s.name,
+        passwordHash,
+        status: "ACTIVE",
+        emailVerified: new Date(),
+        locale: "en",
+        timezone: "Asia/Jakarta",
+      },
+      update: {},
+      select: { id: true, email: true },
+    });
+    staffUsers.push({ id: user.id, email: user.email ?? s.email });
+    const membership = await prisma.membership.upsert({
+      where: { tenantId_userId: { tenantId, userId: user.id } },
+      create: { tenantId, userId: user.id, status: "ACTIVE", title: s.title },
+      update: { title: s.title },
+      select: { id: true },
+    });
+    await prisma.userRole.upsert({
+      where: { membershipId_roleId: { membershipId: membership.id, roleId: await roleId(s.role) } },
+      create: { membershipId: membership.id, roleId: await roleId(s.role) },
+      update: {},
+    });
+  }
+
+  // --- Teachers ------------------------------------------------------------
+  const teacherSeeds = [
+    { email: "teacher.math@demo.local", name: "Rina Kusuma", subject: "Mathematics" },
+    { email: "teacher.eng@demo.local", name: "David Chen", subject: "English" },
+    { email: "teacher.sci@demo.local", name: "Fatima Al-Sayed", subject: "Science" },
+    { email: "teacher.hist@demo.local", name: "Tomoko Sato", subject: "History" },
+  ];
+
+  const teacherIds: string[] = [];
+  for (let i = 0; i < teacherSeeds.length; i++) {
+    const t = teacherSeeds[i]!;
+    const user = await prisma.user.upsert({
+      where: { email: t.email },
+      create: {
+        email: t.email,
+        fullName: t.name,
+        passwordHash,
+        status: "ACTIVE",
+        emailVerified: new Date(),
+        locale: "en",
+      },
+      update: {},
+      select: { id: true },
+    });
+    const membership = await prisma.membership.upsert({
+      where: { tenantId_userId: { tenantId, userId: user.id } },
+      create: { tenantId, userId: user.id, status: "ACTIVE", title: `Teacher - ${t.subject}` },
+      update: {},
+      select: { id: true },
+    });
+    await prisma.userRole.upsert({
+      where: { membershipId_roleId: { membershipId: membership.id, roleId: await roleId("teacher") } },
+      create: { membershipId: membership.id, roleId: await roleId("teacher") },
+      update: {},
+    });
+    const teacher = await prisma.teacher.upsert({
+      where: { tenantId_employeeNumber: { tenantId, employeeNumber: `T-${String(i + 1).padStart(3, "0")}` } },
+      create: {
+        tenantId,
+        campusId: campus.id,
+        userId: user.id,
+        employeeNumber: `T-${String(i + 1).padStart(3, "0")}`,
+        fullName: t.name,
+        status: "ACTIVE",
+        employmentType: "FULL_TIME",
+        joinDate: new Date("2022-07-01"),
+      },
+      update: {},
+      select: { id: true },
+    });
+    teacherIds.push(teacher.id);
+  }
+
+  // --- Academic year + terms ----------------------------------------------
+  const year = await prisma.academicYear.upsert({
+    where: { tenantId_name: { tenantId, name: "2026/2027" } },
+    create: {
+      tenantId,
+      name: "2026/2027",
+      startDate: new Date("2026-07-01"),
+      endDate: new Date("2027-06-30"),
+      isCurrent: true,
+      status: "ACTIVE",
+    },
+    update: { isCurrent: true },
+    select: { id: true },
+  });
+
+  const term1 = await prisma.academicTerm.upsert({
+    where: { academicYearId_sequence: { academicYearId: year.id, sequence: 1 } },
+    create: {
+      academicYearId: year.id,
+      name: "Term 1",
+      type: "SEMESTER",
+      startDate: new Date("2026-07-01"),
+      endDate: new Date("2026-12-20"),
+      sequence: 1,
+      isCurrent: true,
+    },
+    update: {},
+    select: { id: true },
+  });
+
+  // --- Grade levels --------------------------------------------------------
+  const gradeLevels: string[] = [];
+  for (const [i, name] of ["Grade 10", "Grade 11", "Grade 12"].entries()) {
+    const code = `G${10 + i}`;
+    const gl = await prisma.gradeLevel.upsert({
+      where: { tenantId_code: { tenantId, code } },
+      create: { tenantId, name, code, sequence: i + 1, stage: "Secondary" },
+      update: {},
+      select: { id: true },
+    });
+    gradeLevels.push(gl.id);
+  }
+
+  // --- Subjects ------------------------------------------------------------
+  const subjectSeeds = [
+    { code: "MATH", name: "Mathematics", teacherIdx: 0 },
+    { code: "ENG", name: "English", teacherIdx: 1 },
+    { code: "SCI", name: "Science", teacherIdx: 2 },
+    { code: "HIST", name: "History", teacherIdx: 3 },
+  ];
+  const subjectIds: string[] = [];
+  for (const s of subjectSeeds) {
+    const subject = await prisma.subject.upsert({
+      where: { tenantId_code: { tenantId, code: s.code } },
+      create: { tenantId, code: s.code, name: s.name, credits: 3 },
+      update: {},
+      select: { id: true },
+    });
+    subjectIds.push(subject.id);
+  }
+
+  // --- Classrooms ----------------------------------------------------------
+  const classrooms: { id: string; name: string }[] = [];
+  for (let g = 0; g < gradeLevels.length; g++) {
+    const name = `Grade ${10 + g}A`;
+    const c = await prisma.classroom.upsert({
+      where: { tenantId_code: { tenantId, code: name.replace(/\s+/g, "-") } },
+      create: {
+        tenantId,
+        campusId: campus.id,
+        academicYearId: year.id,
+        gradeLevelId: gradeLevels[g]!,
+        code: name.replace(/\s+/g, "-"),
+        name,
+        capacity: 30,
+      },
+      update: {},
+      select: { id: true, name: true },
+    });
+    classrooms.push(c);
+  }
+
+  // --- Students + guardians ------------------------------------------------
+  const studentSeeds = [
+    { first: "Aisha", last: "Putri", gender: "FEMALE", classIdx: 0 },
+    { first: "Ben", last: "Hartono", gender: "MALE", classIdx: 0 },
+    { first: "Chloe", last: "Nguyen", gender: "FEMALE", classIdx: 1 },
+    { first: "Daniel", last: "Kim", gender: "MALE", classIdx: 1 },
+    { first: "Emma", last: "Silva", gender: "FEMALE", classIdx: 2 },
+    { first: "Farid", last: "Hakim", gender: "MALE", classIdx: 2 },
+    { first: "Grace", last: "Osei", gender: "FEMALE", classIdx: 0 },
+    { first: "Hana", last: "Yamamoto", gender: "FEMALE", classIdx: 1 },
+  ];
+
+  for (let i = 0; i < studentSeeds.length; i++) {
+    const s = studentSeeds[i]!;
+    const idx = i + 1;
+    const email = `student${String(idx).padStart(2, "0")}@demo.local`;
+    const user = await prisma.user.upsert({
+      where: { email },
+      create: {
+        email,
+        fullName: `${s.first} ${s.last}`,
+        passwordHash,
+        status: "ACTIVE",
+        emailVerified: new Date(),
+        locale: "en",
+      },
+      update: {},
+      select: { id: true },
+    });
+    const membership = await prisma.membership.upsert({
+      where: { tenantId_userId: { tenantId, userId: user.id } },
+      create: { tenantId, userId: user.id, status: "ACTIVE" },
+      update: {},
+      select: { id: true },
+    });
+    await prisma.userRole.upsert({
+      where: { membershipId_roleId: { membershipId: membership.id, roleId: await roleId("student") } },
+      create: { membershipId: membership.id, roleId: await roleId("student") },
+      update: {},
+    });
+
+    const student = await prisma.student.upsert({
+      where: { tenantId_studentNumber: { tenantId, studentNumber: `S-${String(idx).padStart(4, "0")}` } },
+      create: {
+        tenantId,
+        campusId: campus.id,
+        userId: user.id,
+        studentNumber: `S-${String(idx).padStart(4, "0")}`,
+        fullName: `${s.first} ${s.last}`,
+        gender: s.gender,
+        birthDate: new Date(2009, (i % 12), 10 + i),
+        status: "ACTIVE",
+        admissionDate: new Date("2026-07-01"),
+      },
+      update: {},
+      select: { id: true },
+    });
+
+    // Enrollment in a classroom.
+    const classroom = classrooms[s.classIdx % classrooms.length]!;
+    await prisma.enrollment.upsert({
+      where: { studentId_academicYearId: { studentId: student.id, academicYearId: year.id } },
+      create: {
+        tenantId,
+        studentId: student.id,
+        classroomId: classroom.id,
+        academicYearId: year.id,
+        status: "ACTIVE",
+      },
+      update: {},
+    });
+
+    // Guardian (parent) linked to the student.
+    const parentEmail = `parent${String(idx).padStart(2, "0")}@demo.local`;
+    const parentUser = await prisma.user.upsert({
+      where: { email: parentEmail },
+      create: {
+        email: parentEmail,
+        fullName: `${s.last} Family`,
+        passwordHash,
+        status: "ACTIVE",
+        emailVerified: new Date(),
+        locale: "en",
+      },
+      update: {},
+      select: { id: true },
+    });
+    const parentMembership = await prisma.membership.upsert({
+      where: { tenantId_userId: { tenantId, userId: parentUser.id } },
+      create: { tenantId, userId: parentUser.id, status: "ACTIVE" },
+      update: {},
+      select: { id: true },
+    });
+    await prisma.userRole.upsert({
+      where: { membershipId_roleId: { membershipId: parentMembership.id, roleId: await roleId("parent") } },
+      create: { membershipId: parentMembership.id, roleId: await roleId("parent") },
+      update: {},
+    });
+
+    const guardian = await prisma.guardian.upsert({
+      where: { userId: parentUser.id },
+      create: {
+        tenantId,
+        userId: parentUser.id,
+        fullName: `${s.last} Family`,
+        relationship: "GUARDIAN",
+        phone: "+62 800 000 0000",
+      },
+      update: {},
+      select: { id: true },
+    });
+    await prisma.studentGuardian.upsert({
+      where: { studentId_guardianId: { studentId: student.id, guardianId: guardian.id } },
+      create: {
+        studentId: student.id,
+        guardianId: guardian.id,
+        relationship: "GUARDIAN",
+        isPrimary: true,
+      },
+      update: {},
+    });
+  }
+
+  // --- Announcement + event ------------------------------------------------
+  await prisma.announcement.create({
+    data: {
+      tenantId,
+      authorUserId: staffUsers[0]!.id,
+      title: "Welcome to the new school year",
+      body: "Term 1 begins on 1 July. Please review the updated timetable in your portal.",
+      status: "PUBLISHED",
+      priority: "NORMAL",
+      audience: "ALL",
+      publishAt: new Date(),
+    },
+  }).catch(() => undefined);
+
+  await prisma.event.create({
+    data: {
+      tenantId,
+      title: "Parent-Teacher Meeting",
+      description: "Term 1 progress meetings for all grade levels.",
+      startAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      endAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000),
+      location: "Main Hall",
+      status: "PUBLISHED",
+    },
+  }).catch(() => undefined);
+
+  console.log("\nSeed complete.");
+  console.log("---------------------------------------------");
+  console.log("Demo school slug:", DEMO_SLUG);
+  console.log("Sign in at /login with any of these (password: %s):", SEED_PASSWORD);
+  console.log("  Platform admin : superadmin@demo.local");
+  console.log("  Principal      : principal@demo.local");
+  console.log("  School admin   : admin@demo.local");
+  console.log("  Teacher        : teacher.math@demo.local");
+  console.log("  Student        : student01@demo.local");
+  console.log("  Parent         : parent01@demo.local");
+  console.log("---------------------------------------------");
+  void pick;
+  void randomBytes;
+  void term1;
+  void subjectIds;
+  void teacherIds;
+  void superAdmin;
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
