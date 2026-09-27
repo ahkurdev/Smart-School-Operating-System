@@ -6,9 +6,9 @@
 
 | Field | Value |
 |---|---|
-| Current phase | 11 completed, starting 12 |
-| Phases completed | 1-11 |
-| Next phase | 12 - Student data model |
+| Current phase | 17 completed, starting 18 |
+| Phases completed | 1-17 |
+| Next phase | 18 - Admin shell/navigation |
 | Build state | production build green, lint clean, typecheck clean |
 | Tests | no automated tests yet (added Phase 95); manual browser E2E done |
 

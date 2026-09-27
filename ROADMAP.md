@@ -16,11 +16,11 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 10. Tenant/campus administration
 - [x] 11. User management
 - [x] 12. Student data model
-- [ ] 13. Teacher/staff model
-- [ ] 14. Guardian model
-- [ ] 15. Academic year/term structure
-- [ ] 16. Grade/class structure
-- [ ] 17. Subject/curriculum structure
+- [x] 13. Teacher/staff model
+- [x] 14. Guardian model
+- [x] 15. Academic year/term structure
+- [x] 16. Grade/class structure
+- [x] 17. Subject/curriculum structure
 - [ ] 18. Admin shell/navigation
 - [ ] 19. Global search/command palette
 - [ ] 20. Student management UI/API
