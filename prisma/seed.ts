@@ -292,6 +292,7 @@ async function main() {
 
   // --- Classrooms ----------------------------------------------------------
   const classrooms: { id: string; name: string }[] = [];
+  const studentIds: string[] = [];
   for (let g = 0; g < gradeLevels.length; g++) {
     const name = `Grade ${10 + g}A`;
     const c = await prisma.classroom.upsert({
@@ -382,6 +383,7 @@ async function main() {
       },
       update: {},
     });
+    studentIds.push(student.id);
 
     // Guardian (parent) linked to the student.
     const parentEmail = `parent${String(idx).padStart(2, "0")}@demo.local`;
@@ -632,6 +634,110 @@ async function main() {
           { tenantId, academicYearId: year.id, classroomId: classrooms[0].id, subjectId: subjectIds[Math.min(1, subjectIds.length - 1)]!, dayOfWeek: 1, startTime: "07:45", endTime: "08:30" },
           { tenantId, academicYearId: year.id, classroomId: classrooms[0].id, subjectId: subjectIds[0]!, teacherId: teacherIds[0]!, dayOfWeek: 3, startTime: "07:00", endTime: "07:45" },
         ],
+      });
+    }
+  }
+
+  // --- Work: assignments, materials, assessments, grades -------------------
+  // Demo content so the Assignments/Materials/Grades screens are populated.
+  const firstClass = classrooms[0]!;
+  const mathSubject = subjectIds[0]!;
+
+  const demoAssignment = await prisma.assignment.upsert({
+    where: { id: `demo-assignment-1` },
+    create: {
+      id: `demo-assignment-1`,
+      tenantId,
+      classroomId: firstClass.id,
+      subjectId: mathSubject,
+      teacherId: teacherIds[0] ?? null,
+      title: "Fractions worksheet",
+      instructions: "Solve questions 1-10. Show your working.",
+      maxScore: 50,
+      dueAt: new Date(Date.now() + 3 * 24 * 3600 * 1000),
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+    },
+    update: {},
+    select: { id: true, maxScore: true },
+  });
+
+  // One student submits, so the teacher view has something to grade.
+  if (studentIds[0]) {
+    await prisma.assignmentSubmission.upsert({
+      where: { assignmentId_studentId: { assignmentId: demoAssignment.id, studentId: studentIds[0] } },
+      create: {
+        tenantId,
+        assignmentId: demoAssignment.id,
+        studentId: studentIds[0],
+        content: "1/2 + 1/3 = 5/6",
+        status: "SUBMITTED",
+      },
+      update: {},
+    });
+  }
+
+  const materialSeeds = [
+    { title: "Chapter 3 notes", type: "DOCUMENT" as const, status: "PUBLISHED" as const, unit: "Fractions" },
+    { title: "Khan Academy: Fractions", type: "LINK" as const, status: "PUBLISHED" as const, url: "https://www.khanacademy.org/math/arithmetic/fraction-arithmetic" },
+    { title: "Draft: extra practice sheet", type: "DOCUMENT" as const, status: "DRAFT" as const, unit: "Fractions" },
+  ];
+  for (const m of materialSeeds) {
+    await prisma.learningMaterial.upsert({
+      where: { id: `demo-material-${m.title.slice(0, 8).replace(/\W/g, "")}` },
+      create: {
+        id: `demo-material-${m.title.slice(0, 8).replace(/\W/g, "")}`,
+        tenantId,
+        subjectId: mathSubject,
+        classroomId: firstClass.id,
+        teacherId: teacherIds[0] ?? null,
+        title: m.title,
+        type: m.type,
+        status: m.status,
+        unit: m.unit ?? null,
+        url: m.url ?? null,
+      },
+      update: {},
+    });
+  }
+
+  const assessmentSeeds = [
+    { title: "Quiz 1", type: "QUIZ" as const, maxScore: 20, weight: 1, status: "PUBLISHED" as const },
+    { title: "Midterm Exam", type: "EXAM" as const, maxScore: 100, weight: 2, status: "DRAFT" as const },
+  ];
+  for (const a of assessmentSeeds) {
+    const assess = await prisma.assessment.upsert({
+      where: { id: `demo-assessment-${a.title.slice(0, 5).replace(/\W/g, "")}` },
+      create: {
+        id: `demo-assessment-${a.title.slice(0, 5).replace(/\W/g, "")}`,
+        tenantId,
+        academicYearId: year.id,
+        classroomId: firstClass.id,
+        subjectId: mathSubject,
+        title: a.title,
+        type: a.type,
+        maxScore: a.maxScore,
+        weight: a.weight,
+        status: a.status,
+      },
+      update: {},
+      select: { id: true, maxScore: true },
+    });
+    // Publish the Quiz so students/parents see it; leave the exam in draft.
+    const gradeStatus = a.status === "PUBLISHED" ? ("PUBLISHED" as const) : ("DRAFT" as const);
+    for (let si = 0; si < studentIds.length && si < 4; si++) {
+      const score = Math.round(assess.maxScore * (0.7 + ((si * 7) % 30) / 100));
+      await prisma.grade.upsert({
+        where: { assessmentId_studentId: { assessmentId: assess.id, studentId: studentIds[si]! } },
+        create: {
+          tenantId,
+          assessmentId: assess.id,
+          studentId: studentIds[si]!,
+          score,
+          status: gradeStatus,
+          publishedAt: gradeStatus === "PUBLISHED" ? new Date() : null,
+        },
+        update: {},
       });
     }
   }

@@ -6,9 +6,9 @@
 
 | Field | Value |
 |---|---|
-| Current phase | 55 completed; starting 56 (dashboards) |
-| Phases completed | 1-55, plus storage abstraction (71 lead-in) |
-| Next phase | 56 - Teacher dashboard |
+| Current phase | 58 completed; starting 59 (assignments) |
+| Phases completed | 1-58, plus storage abstraction (71 lead-in) |
+| Next phase | 59 - Assignment module |
 | Build state | production build green (54 routes), lint clean, typecheck clean |
 | Tests | QR security (10), tenant isolation (7) via `npm run verify`; manual browser E2E |
 
@@ -76,12 +76,15 @@
   idempotent applicant -> student conversion. E2E test: 15 checks. DONE
 - Phases 51-55 Timetable: schedule periods, weekly entries, class/teacher/room
   collision detection, class grid editor. Test: 9 checks. DONE
+- Phases 56-58 Role-aware dashboards: teacher / student / parent landing
+  panels from live data. DONE
 
-## Next up (Phase 56)
+## Next up (Phase 59)
 
-Role-aware dashboards: teacher (my classes today, attendance to take, work to
-grade), student (today's timetable, upcoming work, attendance), parent (children
-summary). Then assignments/materials (59-60) and assessment + gradebook (61-65).
+Assignments + materials: `assignment.service` — create/publish assignments per
+class (due dates, attachments), student submissions, and learning materials.
+Then assessment + gradebook (61-65) with a draft->submit->approve->publish
+workflow and report cards.
 
 ## Known issues / cautions
 

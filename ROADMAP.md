@@ -59,9 +59,9 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 53. Collision validation
 - [x] 54. Automatic scheduling foundation
 - [x] 55. Calendar
-- [ ] 56. Teacher dashboard
-- [ ] 57. Student dashboard
-- [ ] 58. Parent dashboard
+- [x] 56. Teacher dashboard
+- [x] 57. Student dashboard
+- [x] 58. Parent dashboard
 - [ ] 59. Assignment module
 - [ ] 60. Learning materials
 - [ ] 61. Assessment model

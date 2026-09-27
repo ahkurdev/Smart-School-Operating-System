@@ -26,7 +26,8 @@
     "test:isolation": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/tenant-isolation-test.ts",
     "test:admissions": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/admissions-e2e-test.ts",
     "test:timetable": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/timetable-collision-test.ts",
-    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation && npm run test:admissions && npm run test:timetable",
+    "test:work": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/work-gradebook-test.ts",
+    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation && npm run test:admissions && npm run test:timetable && npm run test:work",
     "prepare": "prisma generate"
   },
   "prisma": {
