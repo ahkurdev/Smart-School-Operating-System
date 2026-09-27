@@ -21,12 +21,12 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 15. Academic year/term structure
 - [x] 16. Grade/class structure
 - [x] 17. Subject/curriculum structure
-- [ ] 18. Admin shell/navigation
-- [ ] 19. Global search/command palette
-- [ ] 20. Student management UI/API
-- [ ] 21. Teacher management
-- [ ] 22. Guardian relationship system
-- [ ] 23. Enrollment engine
+- [x] 18. Admin shell/navigation
+- [x] 19. Global search/command palette
+- [x] 20. Student management UI/API
+- [x] 21. Teacher management
+- [x] 22. Guardian relationship system
+- [x] 23. Enrollment engine
 - [ ] 24. Public website foundation
 - [ ] 25. CMS foundation
 - [ ] 26. CMS editor
@@ -44,16 +44,16 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [ ] 38. Acceptance/rejection
 - [ ] 39. Applicant -> student conversion
 - [ ] 40. PPDB final E2E verification
-- [ ] 41. Attendance domain
-- [ ] 42. Attendance session
-- [ ] 43. Student digital identity card
-- [ ] 44. Dynamic rotating QR
-- [ ] 45. Teacher QR scanner
-- [ ] 46. Attendance confirmation
-- [ ] 47. Replay/fraud protection
-- [ ] 48. Manual attendance/override
-- [ ] 49. Attendance reporting
-- [ ] 50. Attendance E2E security test
+- [x] 41. Attendance domain
+- [x] 42. Attendance session
+- [x] 43. Student digital identity card
+- [x] 44. Dynamic rotating QR
+- [x] 45. Teacher QR scanner
+- [x] 46. Attendance confirmation
+- [x] 47. Replay/fraud protection
+- [x] 48. Manual attendance/override
+- [x] 49. Attendance reporting
+- [x] 50. Attendance E2E security test
 - [ ] 51. Timetable data model
 - [ ] 52. Manual timetable editor
 - [ ] 53. Collision validation
@@ -74,7 +74,7 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [ ] 68. Messaging safeguards
 - [ ] 69. Library
 - [ ] 70. Digital library
-- [ ] 71. Finance billing
+- [ ] 71. Finance billing  (NOTE: storage abstraction delivered early here)
 - [ ] 72. Payments
 - [ ] 73. Assets
 - [ ] 74. Facility booking
