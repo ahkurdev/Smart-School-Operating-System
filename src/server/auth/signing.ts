@@ -1,5 +1,14 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { timingSafeEqual } from "node:crypto";
 import { getEnv } from "@/lib/env";
+
+/** Constant-time string comparison for signatures/secrets. */
+function timingSafeEqualString(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ba.length !== bb.length) return false;
+  return timingSafeEqual(ba, bb);
+}
 
 /**
  * Signing utilities.
@@ -126,7 +135,7 @@ export async function verifyAttendanceToken(
     toBufferSource(getAttendanceKey()),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["verify"],
+    ["sign"],
   );
   const expected = await crypto.subtle.sign(
     "HMAC",
@@ -134,7 +143,8 @@ export async function verifyAttendanceToken(
     new TextEncoder().encode(body),
   );
   const expectedB64 = b64url(Buffer.from(expected));
-  if (expectedB64 !== sig) {
+  // Timing-safe comparison so a valid-but-wrong signature leaks no timing.
+  if (!timingSafeEqualString(expectedB64, sig)) {
     return { ok: false, reason: "bad_signature" };
   }
 

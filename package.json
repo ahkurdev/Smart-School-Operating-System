@@ -22,6 +22,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:qr": "tsx scripts/qr-security-test.ts",
+    "test:isolation": "tsx scripts/tenant-isolation-test.ts",
+    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation",
     "prepare": "prisma generate"
   },
   "prisma": {
