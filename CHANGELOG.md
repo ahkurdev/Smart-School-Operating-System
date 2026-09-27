@@ -22,3 +22,18 @@ All notable changes to Smart School Operating System. Conventional Commits style
 - Completed the incomplete portable PostgreSQL binaries in `.pgsql/`.
 - Fixed local `.env` `DATABASE_URL` for the trust-auth dev server.
 - Established `PROJECT_STATE.md`, `ROADMAP.md`, `CHANGELOG.md`.
+
+### Added (Phase 8-10)
+- Authentication foundation: bcrypt, jose sessions, lockout, reset, rate limit.
+- RBAC policy engine (~90 permissions, 18 role templates), tenant provisioning.
+- Admin app shell (permission-filtered sidebar, tenant switcher, dashboard).
+
+### Added (Phase 11)
+- User management (list/create/update/roles/status/reset) + roles UI.
+- Shared `DataTable` (TanStack, accessible sorting) and `PageHeader` breadcrumbs.
+
+### Added (Phase 12)
+- Student data model: `student.service` with tenant-scoped reads and
+  permission-gated sensitive fields (medical/special-ed).
+- Students list (search, status/campus filters, pagination) and student detail
+  (profile, enrollment, guardians, restricted notes) with create/edit dialogs.

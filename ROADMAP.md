@@ -11,11 +11,11 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 5. DESIGN.md and design tokens
 - [x] 6. Database architecture and tenant strategy
 - [x] 7. Prisma setup and initial migration
-- [~] 8. Authentication foundation
-- [ ] 9. RBAC and policy engine
-- [ ] 10. Tenant/campus administration
-- [ ] 11. User management
-- [ ] 12. Student data model
+- [x] 8. Authentication foundation
+- [x] 9. RBAC and policy engine
+- [x] 10. Tenant/campus administration
+- [x] 11. User management
+- [x] 12. Student data model
 - [ ] 13. Teacher/staff model
 - [ ] 14. Guardian model
 - [ ] 15. Academic year/term structure
