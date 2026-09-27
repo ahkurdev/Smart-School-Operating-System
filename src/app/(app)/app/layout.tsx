@@ -6,6 +6,7 @@ import { prisma } from "@/server/db/client";
 import { can } from "@/server/policies";
 import { filterNav } from "@/components/layout/nav-config";
 import { AppSidebar, AppSidebarMobile } from "@/components/layout/app-sidebar";
+import { CommandPalette } from "@/features/search/components/command-palette";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Toaster } from "@/components/ui/sonner";
 import type { Permission } from "@/lib/permissions";
@@ -72,6 +73,7 @@ export default async function AppLayout({
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
+            <CommandPalette />
             <UserMenu
               user={{
                 fullName: user?.fullName ?? "Account",
