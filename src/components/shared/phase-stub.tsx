@@ -11,20 +11,20 @@ export function PhaseStub({
   phase,
 }: {
   title: string;
-  description: string;
-  phase: string;
+  description?: string;
+  phase?: string;
 }) {
   return (
     <div className="mx-auto max-w-2xl py-8">
       <Card>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          {description ? <CardDescription>{description}</CardDescription> : null}
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            This area is scheduled for {phase}. It is listed here so the
-            navigation reflects the full system, not a partial mockup.
+            This area is built in {phase ?? "a later phase"}. It is listed here so
+            the navigation reflects the full system, not a partial mockup.
           </p>
         </CardContent>
       </Card>
