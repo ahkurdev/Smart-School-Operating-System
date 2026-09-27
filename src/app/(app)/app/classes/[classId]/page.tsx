@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EditClassDialog } from "@/features/academics/components/edit-class-dialog";
+import { EnrollStudentDialog } from "@/features/enrollments/components/enroll-student-dialog";
 
 export const metadata: Metadata = { title: "Class" };
 
@@ -87,6 +88,15 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
             Roster <span className="tabular text-muted-foreground">({students.length}/{klass.capacity})</span>
           </CardTitle>
           <CardDescription>Students currently enrolled in this class.</CardDescription>
+          {can(actor, "enrollment.manage") && klass.academicYear ? (
+            <div className="pt-2">
+              <EnrollStudentDialog
+                classroomId={klass.id}
+                academicYearId={klass.academicYear.id}
+                className={klass.name}
+              />
+            </div>
+          ) : null}
         </CardHeader>
         <CardContent>
           {students.length === 0 ? (
