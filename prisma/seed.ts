@@ -460,6 +460,86 @@ async function main() {
     },
   }).catch(() => undefined);
 
+  // --- CMS: a published homepage and a news post for the public site --------
+  const homepage = await prisma.cmsPage.upsert({
+    where: { tenantId_slug: { tenantId, slug: "home" } },
+    update: { status: "PUBLISHED", publishedAt: new Date(), isHomepage: true },
+    create: {
+      tenantId,
+      slug: "home",
+      title: "Home",
+      description: "Welcome to our school.",
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      isHomepage: true,
+    },
+  });
+  await prisma.cmsBlock.deleteMany({ where: { tenantId, pageId: homepage.id } });
+  await prisma.cmsBlock.createMany({
+    data: [
+      {
+        tenantId,
+        pageId: homepage.id,
+        type: "HEADING",
+        sequence: 0,
+        data: { text: "A place to learn and grow", level: 1 },
+      },
+      {
+        tenantId,
+        pageId: homepage.id,
+        type: "PARAGRAPH",
+        sequence: 1,
+        data: {
+          text: "We combine strong academics with a caring community. Explore our programmes and apply online.",
+        },
+      },
+      {
+        tenantId,
+        pageId: homepage.id,
+        type: "STATISTICS",
+        sequence: 2,
+        data: {
+          items: [
+            { value: "6", label: "Grade levels" },
+            { value: "12", label: "Subjects" },
+            { value: "1:18", label: "Teacher ratio" },
+            { value: "40+", label: "Years of service" },
+          ],
+        },
+      },
+      {
+        tenantId,
+        pageId: homepage.id,
+        type: "CTA",
+        sequence: 3,
+        data: {
+          title: "Admissions are open",
+          body: "Start an application in a few minutes.",
+          label: "Apply now",
+          href: "/apply",
+        },
+      },
+    ],
+  });
+
+  const postClash = await prisma.post.findFirst({ where: { tenantId, slug: "welcome" } });
+  if (!postClash) {
+    await prisma.post.create({
+      data: {
+        tenantId,
+        slug: "welcome",
+        title: "Welcome to the new school year",
+        excerpt: "Term 1 begins soon — here is everything families need to know.",
+        content:
+          "Term 1 begins on 1 July. Please review the updated timetable in your portal.\n\nWe look forward to welcoming everyone back.",
+        type: "NEWS",
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        authorUserId: staffUsers[0]!.id,
+      },
+    });
+  }
+
   console.log("\nSeed complete.");
   console.log("---------------------------------------------");
   console.log("Demo school slug:", DEMO_SLUG);
