@@ -11,7 +11,6 @@
  *
  * Run: node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/qr-security-test.ts
  */
-import assert from "node:assert/strict";
 import { signAttendanceToken, verifyAttendanceToken } from "../src/server/auth/signing";
 
 let passed = 0;
@@ -54,7 +53,7 @@ async function main() {
   check("payload has no name/photo/nisn/address", !("name" in decoded) && !("photo" in decoded) && !("nisn" in decoded) && !("address" in decoded));
 
   // 3. Tampered payload fails.
-  const [v, body, sig] = good.split(".");
+  const [v, , sig] = good.split(".");
   const tamperedBody = Buffer.from(
     JSON.stringify({ ...decoded, sid: "attacker_swapped_student" }),
   ).toString("base64url");

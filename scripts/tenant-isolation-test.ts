@@ -12,6 +12,7 @@
 import { prisma } from "../src/server/db/client";
 import { listStudents, getStudent } from "../src/server/services/student.service";
 import type { Actor } from "../src/types/actor";
+import type { Permission } from "../src/lib/permissions";
 
 let passed = 0;
 let failed = 0;
@@ -31,7 +32,7 @@ function actorFor(tenantId: string, perms: Actor["permissions"], userId = "test-
     tenantId,
     isPlatform: false,
     roleKeys: ["school_admin"],
-    permissions: new Set(perms),
+    permissions: perms,
     ip: null,
     userAgent: null,
   };
@@ -52,8 +53,8 @@ async function main() {
       select: { id: true },
     });
 
-    const actorA = actorFor(a.id, ["student.read", "teacher.read"]);
-    const actorB = actorFor(b.id, ["student.read", "teacher.read"]);
+    const actorA = actorFor(a.id, new Set<Permission>(["student.read", "teacher.read"]));
+    const actorB = actorFor(b.id, new Set<Permission>(["student.read", "teacher.read"]));
 
     // Listing in tenant A returns only A's students.
     const listA = await listStudents(actorA, { pageSize: 100 });
