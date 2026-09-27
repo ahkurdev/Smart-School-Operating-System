@@ -6,10 +6,10 @@
 
 | Field | Value |
 |---|---|
-| Current phase | 50 completed (plus 18/19/23); starting 24 (public website/CMS) |
-| Phases completed | 1-23, 41-50, plus storage abstraction (71 lead-in) |
-| Next phase | 24 - Public website foundation |
-| Build state | production build green (41 routes), lint clean, typecheck clean |
+| Current phase | 30 completed; starting 31 (PPDB admissions) |
+| Phases completed | 1-30, 41-50, plus storage abstraction (71 lead-in) |
+| Next phase | 31 - PPDB architecture |
+| Build state | production build green (45 routes), lint clean, typecheck clean |
 | Tests | QR security (10), tenant isolation (7) via `npm run verify`; manual browser E2E |
 
 ## Verification (proof of function)
@@ -69,13 +69,15 @@
   card with rotating QR, teacher scanner, preview/confirm, replay protection. DONE
 - Phases 48-50 Manual override (audited), attendance reporting, QR security test. DONE
 - Storage abstraction (local path-safe + S3 SigV4) + file.service + /api/files. DONE
+- Phases 24-30 Public site + CMS: block-based pages, publish workflow, posts,
+  events, media library; public /s/[tenant] site with draft-leak protection. DONE
 
-## Next up (Phase 24)
+## Next up (Phase 31)
 
-Public website foundation + CMS: `cms.service` (pages/posts/events with
-draft/scheduled/published/archived), block-based page builder (bounded block
-types, no arbitrary code), media library, and public routes under `(public)`
-that read published content for the tenant. Then PPDB (31-40).
+PPDB / admissions: `admission.service` — admission periods and tracks, dynamic
+application forms (bounded field types), applicant portal with document upload,
+admin verification, scoring/workflow, acceptance, and applicant -> student
+conversion. Ends with an end-to-end admissions test (Phase 40).
 
 ## Known issues / cautions
 

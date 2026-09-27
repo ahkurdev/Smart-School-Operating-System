@@ -24,7 +24,8 @@
     "test:e2e": "playwright test",
     "test:qr": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/qr-security-test.ts",
     "test:isolation": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/tenant-isolation-test.ts",
-    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation",
+    "test:admissions": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/admissions-e2e-test.ts",
+    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation && npm run test:admissions",
     "prepare": "prisma generate"
   },
   "prisma": {

@@ -540,6 +540,75 @@ async function main() {
     });
   }
 
+  // --- PPDB: a demo applicant user (uses the /apply portal) ----------------
+  const applicantUser = await prisma.user.upsert({
+    where: { email: "applicant@demo.local" },
+    create: {
+      email: "applicant@demo.local",
+      fullName: "Ayu Lestari",
+      passwordHash,
+      status: "ACTIVE",
+      emailVerified: new Date(),
+      locale: "en",
+      timezone: "Asia/Jakarta",
+    },
+    update: {},
+    select: { id: true },
+  });
+  const applicantMembership = await prisma.membership.upsert({
+    where: { tenantId_userId: { tenantId, userId: applicantUser.id } },
+    create: { tenantId, userId: applicantUser.id, status: "ACTIVE", title: "Applicant" },
+    update: {},
+    select: { id: true },
+  });
+  await prisma.userRole.upsert({
+    where: { membershipId_roleId: { membershipId: applicantMembership.id, roleId: await roleId("applicant") } },
+    create: { membershipId: applicantMembership.id, roleId: await roleId("applicant") },
+    update: {},
+  });
+  await prisma.applicant.upsert({
+    where: { userId: applicantUser.id },
+    create: { tenantId, userId: applicantUser.id, fullName: "Ayu Lestari", email: "applicant@demo.local" },
+    update: {},
+  });
+
+  // --- PPDB: an open admission period with a form and a track --------------
+  const period = await prisma.admissionPeriod.upsert({
+    where: { id: `seed-period-${tenant}` },
+    update: {},
+    create: {
+      id: `seed-period-${tenant}`,
+      tenantId,
+      academicYearId: year.id,
+      name: "2026/2027 Intake",
+      description: "Open admissions for the next academic year.",
+      openAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      closeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      quota: 120,
+      status: "OPEN",
+    },
+  });
+  await prisma.admissionTrack.upsert({
+    where: { periodId_code: { periodId: period.id, code: "REGULER" } },
+    update: {},
+    create: { tenantId, periodId: period.id, name: "Regular", code: "REGULER", quota: 100 },
+  });
+  const form = await prisma.applicationForm.upsert({
+    where: { id: `seed-form-${tenant}` },
+    update: {},
+    create: { id: `seed-form-${tenant}`, tenantId, periodId: period.id, name: "Application form", isDefault: true },
+  });
+  await prisma.applicationField.deleteMany({ where: { tenantId, formId: form.id } });
+  await prisma.applicationField.createMany({
+    data: [
+      { tenantId, formId: form.id, key: "national_id", label: "National ID / NISN", type: "SHORT_TEXT", required: true, sequence: 0, section: "Personal" },
+      { tenantId, formId: form.id, key: "birth_place", label: "Place of birth", type: "SHORT_TEXT", required: true, sequence: 1, section: "Personal" },
+      { tenantId, formId: form.id, key: "address", label: "Home address", type: "LONG_TEXT", required: true, sequence: 2, section: "Personal" },
+      { tenantId, formId: form.id, key: "previous_school_name", label: "Previous school", type: "PREVIOUS_SCHOOL", required: false, sequence: 3, section: "Education" },
+      { tenantId, formId: form.id, key: "programme", label: "Preferred programme", type: "SELECT", required: true, options: ["Science", "Social", "Language"], sequence: 4, section: "Education" },
+    ],
+  });
+
   console.log("\nSeed complete.");
   console.log("---------------------------------------------");
   console.log("Demo school slug:", DEMO_SLUG);
@@ -550,6 +619,7 @@ async function main() {
   console.log("  Teacher        : teacher.math@demo.local");
   console.log("  Student        : student01@demo.local");
   console.log("  Parent         : parent01@demo.local");
+  console.log("  Applicant      : applicant@demo.local");
   console.log("---------------------------------------------");
   void pick;
   void randomBytes;

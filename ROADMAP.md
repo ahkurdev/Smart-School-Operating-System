@@ -27,13 +27,13 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 21. Teacher management
 - [x] 22. Guardian relationship system
 - [x] 23. Enrollment engine
-- [ ] 24. Public website foundation
-- [ ] 25. CMS foundation
-- [ ] 26. CMS editor
-- [ ] 27. Media management
-- [ ] 28. Public pages
-- [ ] 29. News/events/gallery
-- [ ] 30. SEO/public metadata
+- [x] 24. Public website foundation
+- [x] 25. CMS foundation
+- [x] 26. CMS editor
+- [x] 27. Media management
+- [x] 28. Public pages
+- [x] 29. News/events/gallery
+- [x] 30. SEO/public metadata
 - [ ] 31. PPDB architecture
 - [ ] 32. Admission periods/tracks
 - [ ] 33. Dynamic admission forms

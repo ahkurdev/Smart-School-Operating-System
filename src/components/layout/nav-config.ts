@@ -23,7 +23,11 @@ export type NavGroup = {
 export const ADMIN_NAV: NavGroup[] = [
   {
     label: "Overview",
-    items: [{ label: "Dashboard", href: "/app" }, { label: "My ID card", href: "/app/my-card", permission: "attendance.read_own" }],
+    items: [
+      { label: "Dashboard", href: "/app" },
+      { label: "My ID card", href: "/app/my-card", permission: "attendance.read_own" },
+      { label: "Apply to school", href: "/apply", permission: "admission.apply" },
+    ],
   },
   {
     label: "People",
