@@ -9,7 +9,7 @@ import {
   requestPasswordReset,
   confirmPasswordReset,
 } from "@/server/auth/service";
-import { SESSION_COOKIE, SESSION_TTL_DAYS, revokeSession } from "@/server/auth/session";
+import { SESSION_COOKIE, revokeSession } from "@/server/auth/session";
 import { verifySessionJwt } from "@/server/auth/signing";
 import { isAppError } from "@/server/errors";
 
@@ -177,6 +177,3 @@ export async function logoutAction(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE);
   redirect("/login");
 }
-
-export const SESSION_COOKIE_NAME = SESSION_COOKIE;
-export const SESSION_TTL_DAYS_VALUE = SESSION_TTL_DAYS;

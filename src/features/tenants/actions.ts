@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { SESSION_COOKIE, setSessionTenant, buildActor } from "@/server/auth/session";
+import { SESSION_COOKIE, setSessionTenant } from "@/server/auth/session";
 import { verifySessionJwt } from "@/server/auth/signing";
 import { prisma } from "@/server/db/client";
 
@@ -46,5 +46,3 @@ export async function listMyTenantsAction() {
     slug: m.tenant.slug,
   }));
 }
-
-export { buildActor };
