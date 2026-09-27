@@ -1,13 +1,206 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, Megaphone, Users, GraduationCap, School } from "lucide-react";
+import { CalendarDays, Megaphone, Users, GraduationCap, School, BookOpen, UserCheck } from "lucide-react";
 import { requireActor } from "@/server/auth/context";
 import { getDashboardData } from "@/server/services/dashboard.service";
+import { getLandingDashboard } from "@/server/services/role-dashboard.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata: Metadata = { title: "Dashboard" };
+
+/**
+ * A "my day" panel for staff/students/parents (Phases 56-58). It sits above the
+ * school-wide admin cards so a teacher lands on their own timetable, a student
+ * on theirs, and a parent on their children — all from live data.
+ */
+async function RolePanel() {
+  const actor = await requireActor();
+  const landing = await getLandingDashboard(actor);
+
+  if (landing.kind === "teacher" && landing.data) {
+    const d = landing.data;
+    return (
+      <section className="space-y-4" aria-labelledby="my-day">
+        <h2 id="my-day" className="font-display text-lg font-semibold">
+          My day · {d.teacherName}
+        </h2>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Today&apos;s classes</CardTitle>
+              <CardDescription>{d.todayClasses.length} scheduled for {new Date().toLocaleDateString(undefined, { weekday: "long" })}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {d.todayClasses.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No classes scheduled today.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {d.todayClasses.map((c) => (
+                    <li key={c.id} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{c.subject}</p>
+                        <p className="text-xs text-muted-foreground">{c.classroom}</p>
+                      </div>
+                      <span className="tabular shrink-0 text-xs text-muted-foreground">
+                        {c.startTime}–{c.endTime}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Attendance to take</CardTitle>
+              <CardDescription>Sessions awaiting a scan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {d.sessionsToTake.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nothing to take right now.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {d.sessionsToTake.map((s) => (
+                    <li key={s.id}>
+                      <Link href={`/app/attendance/${s.id}`} className="flex items-center justify-between gap-3 py-2 hover:text-primary">
+                        <span className="text-sm">
+                          {s.classroom}
+                          {s.subject ? ` · ${s.subject}` : ""}
+                        </span>
+                        <Badge variant={s.status === "OPEN" ? "success" : "neutral"}>{s.status.toLowerCase()}</Badge>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
+
+  if (landing.kind === "student" && landing.data) {
+    const d = landing.data;
+    return (
+      <section className="space-y-4" aria-labelledby="my-day">
+        <h2 id="my-day" className="font-display text-lg font-semibold">
+          My day · {d.studentName}
+        </h2>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Today&apos;s timetable</CardTitle>
+              <CardDescription>{d.className ?? "No class assigned"}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {d.todayClasses.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No classes today.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {d.todayClasses.map((c, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{c.subject}</p>
+                        <p className="text-xs text-muted-foreground">{c.teacher ?? "—"}{c.room ? ` · ${c.room}` : ""}</p>
+                      </div>
+                      <span className="tabular shrink-0 text-xs text-muted-foreground">
+                        {c.startTime}–{c.endTime}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">My attendance</CardTitle>
+                <CardDescription>All-time</CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center gap-6">
+                <div>
+                  <p className="text-xs text-muted-foreground">Rate</p>
+                  <p className="tabular text-2xl font-semibold">{d.attendance.rate != null ? `${d.attendance.rate}%` : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Present</p>
+                  <p className="tabular text-xl font-semibold text-success">{d.attendance.present}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Absent</p>
+                  <p className="tabular text-xl font-semibold text-destructive">{d.attendance.absent}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Upcoming work</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {d.upcomingWork.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nothing due.</p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {d.upcomingWork.map((w) => (
+                      <li key={w.id} className="flex items-center justify-between gap-3 py-2">
+                        <span className="truncate text-sm">{w.title}</span>
+                        <span className="tabular shrink-0 text-xs text-muted-foreground">
+                          {w.dueAt ? new Date(w.dueAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "no due date"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (landing.kind === "parent" && landing.data) {
+    return (
+      <section className="space-y-4" aria-labelledby="my-day">
+        <h2 id="my-day" className="font-display text-lg font-semibold">My children</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {landing.data.children.map((c) => (
+            <Card key={c.id}>
+              <CardHeader>
+                <CardTitle className="text-base">{c.name}</CardTitle>
+                <CardDescription>
+                  {c.studentNumber}
+                  {c.className ? ` · ${c.className}` : ""}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <UserCheck className="size-4 text-muted-foreground" aria-hidden />
+                  Attendance: <span className="tabular font-medium">{c.attendanceRate != null ? `${c.attendanceRate}%` : "—"}</span>
+                </div>
+                {c.recentGrade && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <BookOpen className="size-4 text-muted-foreground" aria-hidden />
+                    <span className="truncate">{c.recentGrade.title}:</span>
+                    <span className="tabular font-medium">
+                      {c.recentGrade.score ?? "—"}
+                      {c.recentGrade.maxScore ? `/${c.recentGrade.maxScore}` : ""}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  return null;
+}
 
 function StatCard({
   label,
@@ -48,6 +241,8 @@ export default async function DashboardPage() {
           Today&apos;s picture across the school. Figures reflect live data.
         </p>
       </header>
+
+      <RolePanel />
 
       <section aria-labelledby="counts-heading">
         <h2 id="counts-heading" className="sr-only">

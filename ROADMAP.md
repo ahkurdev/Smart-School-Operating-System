@@ -54,11 +54,11 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 48. Manual attendance/override
 - [x] 49. Attendance reporting
 - [x] 50. Attendance E2E security test
-- [ ] 51. Timetable data model
-- [ ] 52. Manual timetable editor
-- [ ] 53. Collision validation
-- [ ] 54. Automatic scheduling foundation
-- [ ] 55. Calendar
+- [x] 51. Timetable data model
+- [x] 52. Manual timetable editor
+- [x] 53. Collision validation
+- [x] 54. Automatic scheduling foundation
+- [x] 55. Calendar
 - [ ] 56. Teacher dashboard
 - [ ] 57. Student dashboard
 - [ ] 58. Parent dashboard

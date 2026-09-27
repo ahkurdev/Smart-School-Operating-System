@@ -6,10 +6,10 @@
 
 | Field | Value |
 |---|---|
-| Current phase | 40 completed; starting 51 (timetable) |
-| Phases completed | 1-40, 41-50, plus storage abstraction (71 lead-in) |
-| Next phase | 51 - Timetable data model |
-| Build state | production build green (53 routes), lint clean, typecheck clean |
+| Current phase | 55 completed; starting 56 (dashboards) |
+| Phases completed | 1-55, plus storage abstraction (71 lead-in) |
+| Next phase | 56 - Teacher dashboard |
+| Build state | production build green (54 routes), lint clean, typecheck clean |
 | Tests | QR security (10), tenant isolation (7) via `npm run verify`; manual browser E2E |
 
 ## Verification (proof of function)
@@ -74,13 +74,14 @@
 - Phases 31-40 PPDB admissions: periods, tracks, dynamic forms, applicant
   portal with uploads, verification, scoring/ranking, decisions, and
   idempotent applicant -> student conversion. E2E test: 15 checks. DONE
+- Phases 51-55 Timetable: schedule periods, weekly entries, class/teacher/room
+  collision detection, class grid editor. Test: 9 checks. DONE
 
-## Next up (Phase 51)
+## Next up (Phase 56)
 
-Timetable: `timetable.service` — recurring weekly slots per class/subject/teacher
-with collision validation, an editor grid, and a read-only view for teachers and
-students. Then dashboards (56-58), assignments/materials (59-60), assessment +
-gradebook (61-65).
+Role-aware dashboards: teacher (my classes today, attendance to take, work to
+grade), student (today's timetable, upcoming work, attendance), parent (children
+summary). Then assignments/materials (59-60) and assessment + gradebook (61-65).
 
 ## Known issues / cautions
 
