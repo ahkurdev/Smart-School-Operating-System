@@ -609,6 +609,33 @@ async function main() {
     ],
   });
 
+  // --- Timetable: bell periods and a few weekly slots ----------------------
+  const periods = [
+    { name: "Period 1", sequence: 1, startTime: "07:00", endTime: "07:45", isBreak: false },
+    { name: "Period 2", sequence: 2, startTime: "07:45", endTime: "08:30", isBreak: false },
+    { name: "Break", sequence: 3, startTime: "08:30", endTime: "09:00", isBreak: true },
+    { name: "Period 3", sequence: 4, startTime: "09:00", endTime: "09:45", isBreak: false },
+  ];
+  for (const p of periods) {
+    await prisma.schedulePeriod.upsert({
+      where: { tenantId_sequence: { tenantId, sequence: p.sequence } },
+      update: { name: p.name, startTime: p.startTime, endTime: p.endTime, isBreak: p.isBreak },
+      create: { tenantId, ...p },
+    });
+  }
+  if (classrooms[0] && subjectIds[0] && teacherIds[0]) {
+    const existingEntries = await prisma.timetableEntry.count({ where: { tenantId, academicYearId: year.id } });
+    if (existingEntries === 0) {
+      await prisma.timetableEntry.createMany({
+        data: [
+          { tenantId, academicYearId: year.id, classroomId: classrooms[0].id, subjectId: subjectIds[0]!, teacherId: teacherIds[0]!, dayOfWeek: 1, startTime: "07:00", endTime: "07:45" },
+          { tenantId, academicYearId: year.id, classroomId: classrooms[0].id, subjectId: subjectIds[Math.min(1, subjectIds.length - 1)]!, dayOfWeek: 1, startTime: "07:45", endTime: "08:30" },
+          { tenantId, academicYearId: year.id, classroomId: classrooms[0].id, subjectId: subjectIds[0]!, teacherId: teacherIds[0]!, dayOfWeek: 3, startTime: "07:00", endTime: "07:45" },
+        ],
+      });
+    }
+  }
+
   console.log("\nSeed complete.");
   console.log("---------------------------------------------");
   console.log("Demo school slug:", DEMO_SLUG);

@@ -34,16 +34,16 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 28. Public pages
 - [x] 29. News/events/gallery
 - [x] 30. SEO/public metadata
-- [ ] 31. PPDB architecture
-- [ ] 32. Admission periods/tracks
-- [ ] 33. Dynamic admission forms
-- [ ] 34. Applicant portal
-- [ ] 35. PPDB document upload
-- [ ] 36. Admin verification
-- [ ] 37. Admission scoring/workflow
-- [ ] 38. Acceptance/rejection
-- [ ] 39. Applicant -> student conversion
-- [ ] 40. PPDB final E2E verification
+- [x] 31. PPDB architecture
+- [x] 32. Admission periods/tracks
+- [x] 33. Dynamic admission forms
+- [x] 34. Applicant portal
+- [x] 35. PPDB document upload
+- [x] 36. Admin verification
+- [x] 37. Admission scoring/workflow
+- [x] 38. Acceptance/rejection
+- [x] 39. Applicant -> student conversion
+- [x] 40. PPDB final E2E verification
 - [x] 41. Attendance domain
 - [x] 42. Attendance session
 - [x] 43. Student digital identity card

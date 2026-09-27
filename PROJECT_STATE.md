@@ -6,10 +6,10 @@
 
 | Field | Value |
 |---|---|
-| Current phase | 30 completed; starting 31 (PPDB admissions) |
-| Phases completed | 1-30, 41-50, plus storage abstraction (71 lead-in) |
-| Next phase | 31 - PPDB architecture |
-| Build state | production build green (45 routes), lint clean, typecheck clean |
+| Current phase | 40 completed; starting 51 (timetable) |
+| Phases completed | 1-40, 41-50, plus storage abstraction (71 lead-in) |
+| Next phase | 51 - Timetable data model |
+| Build state | production build green (53 routes), lint clean, typecheck clean |
 | Tests | QR security (10), tenant isolation (7) via `npm run verify`; manual browser E2E |
 
 ## Verification (proof of function)
@@ -71,13 +71,16 @@
 - Storage abstraction (local path-safe + S3 SigV4) + file.service + /api/files. DONE
 - Phases 24-30 Public site + CMS: block-based pages, publish workflow, posts,
   events, media library; public /s/[tenant] site with draft-leak protection. DONE
+- Phases 31-40 PPDB admissions: periods, tracks, dynamic forms, applicant
+  portal with uploads, verification, scoring/ranking, decisions, and
+  idempotent applicant -> student conversion. E2E test: 15 checks. DONE
 
-## Next up (Phase 31)
+## Next up (Phase 51)
 
-PPDB / admissions: `admission.service` — admission periods and tracks, dynamic
-application forms (bounded field types), applicant portal with document upload,
-admin verification, scoring/workflow, acceptance, and applicant -> student
-conversion. Ends with an end-to-end admissions test (Phase 40).
+Timetable: `timetable.service` — recurring weekly slots per class/subject/teacher
+with collision validation, an editor grid, and a read-only view for teachers and
+students. Then dashboards (56-58), assignments/materials (59-60), assessment +
+gradebook (61-65).
 
 ## Known issues / cautions
 
