@@ -9,14 +9,14 @@
 | Current phase | **100 (final) — verified** |
 | Phases completed | **1–100** |
 | Build state | production build green (56 routes), lint clean, typecheck clean |
-| Tests | **14 suites / 213 checks**, all passing (see below) |
+| Tests | **15 suites / 230 checks**, all passing (see below) |
 | Stack | Next.js 15 (App Router) · React · TypeScript (strict) · Prisma 6 · PostgreSQL |
 
 ## Verification (proof of function — clean room)
 
 A full **clean-room** run was performed on a throwaway database:
 `prisma migrate deploy` (single baseline migration) → **98 tables** → `db:seed`
-→ all **14 test suites (213 checks) pass**. `prisma migrate diff` reports
+→ all **15 test suites (230 checks) pass**. `prisma migrate diff` reports
 **no drift** between the database and `prisma/schema.prisma`.
 
 ### Test suites (`npm run verify`)
@@ -37,6 +37,7 @@ A full **clean-room** run was performed on a throwaway database:
 | `test:platform` | 18 | API keys (hashed/scopes/revoke), webhook signing+delivery, job queue |
 | `test:retention` | 16 | TTL cache, tenant keys, retention apply + isolation |
 | `test:notify` | 14 | Notification fan-out, read scoping, audit trail listing |
+| `test:acceptance` | 17 | Full E2E: setup→CMS→PPDB→QR attendance→grades→AI→audit→isolation |
 
 ### Real browser evidence
 
@@ -124,7 +125,7 @@ headers live (CSP, `X-Frame-Options: DENY`, HSTS, COOP, Permissions-Policy).
 - Phases 95-98 Test coverage, accessibility/responsive checks, browser/perf
   audit, CI/CD + deployment/backup docs. DONE
 - Phases 99-100 Full-system audit + remediation, production-readiness
-  verification (clean room; 14 suites / 213 checks). DONE
+  verification (clean room; 15 suites / 230 checks). DONE
 
 ## Remediation log (Phase 99 findings — fixed, not just reported)
 
@@ -166,7 +167,7 @@ headers live (CSP, `X-Frame-Options: DENY`, HSTS, COOP, Permissions-Policy).
 
 1. Read this file, `ROADMAP.md`, `ARCHITECTURE.md`, `DESIGN.md`.
 2. `bash scripts/pg.sh start` (Postgres on :5433).
-3. `npm run verify` (typecheck + lint + 14 suites) to confirm green.
+3. `npm run verify` (typecheck + lint + 15 suites) to confirm green.
 4. `npm run build` for the production build.
 5. The project is feature-complete through Phase 100; further work is
    enhancement, not completion.

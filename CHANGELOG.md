@@ -80,4 +80,4 @@ All notable changes to Smart School Operating System. Conventional Commits style
   lint → full suite → production build.
 
 ### Tests
-- 14 suites / 213 checks, all green, verified in a clean room.
+- 15 suites / 230 checks, all green, verified in a clean room.
