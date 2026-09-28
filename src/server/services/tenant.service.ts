@@ -165,28 +165,38 @@ export async function updateTenant(
   return updated;
 }
 
+const TENANT_SETTINGS_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  type: true,
+  status: true,
+  timezone: true,
+  locale: true,
+  currency: true,
+  primaryColor: true,
+  logoUrl: true,
+  gradeLabel: true,
+  classLabel: true,
+  studentIdLabel: true,
+  academicTermsPerYear: true,
+  gradingScale: true,
+  featureFlags: true,
+} as const;
+
 /** Read a tenant's public-ish settings (name, branding, feature flags). */
 export async function getTenantBySlug(slug: string) {
   return prisma.tenant.findUnique({
     where: { slug },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      type: true,
-      status: true,
-      timezone: true,
-      locale: true,
-      currency: true,
-      primaryColor: true,
-      logoUrl: true,
-      gradeLabel: true,
-      classLabel: true,
-      studentIdLabel: true,
-      academicTermsPerYear: true,
-      gradingScale: true,
-      featureFlags: true,
-    },
+    select: TENANT_SETTINGS_SELECT,
+  });
+}
+
+/** Read a tenant's settings by id (tenant-scoped callers already know their id). */
+export async function getTenantById(id: string) {
+  return prisma.tenant.findUnique({
+    where: { id },
+    select: TENANT_SETTINGS_SELECT,
   });
 }
 

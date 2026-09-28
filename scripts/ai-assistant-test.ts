@@ -11,6 +11,11 @@
  */
 import { prisma } from "@/server/db/client";
 import type { Actor } from "@/types/actor";
+
+// Force the deterministic mock provider for this test regardless of shell.
+// (Cross-platform: the VAR=val cmd prefix does not work under Windows cmd.exe.)
+process.env.AI_PROVIDER = "mock";
+
 import { runAssistant, listConversations, getConversation, availableToolNames } from "@/server/ai/assistant.service";
 import { toolSchemasFor, findTool } from "@/server/ai/tools";
 

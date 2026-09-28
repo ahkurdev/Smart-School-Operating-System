@@ -72,29 +72,28 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 66. Announcements
 - [x] 67. Notification architecture
 - [x] 68. Messaging safeguards
-- [x] 69. Library
-- [x] 70. Digital library
-- [ ] 71. Finance billing  (NOTE: storage abstraction delivered early here)
-- [ ] 72. Payments
-- [ ] 73. Assets
-- [ ] 74. Facility booking
-- [ ] 75. Extracurricular
-- [ ] 76. Achievements
-- [ ] 77. Counseling
-- [ ] 78. Discipline
-- [ ] 79. Secure documents
-- [ ] 80. Import/export
-- [ ] 81. Reporting engine
-- [ ] 82. Analytics
-- [ ] 83. Academic risk indicators
-- [ ] 84. AI provider abstraction
-- [ ] 85. AI tool permission system
-- [ ] 86. AI admin assistant
-- [ ] 87. AI teacher assistant
-- [ ] 88. AI student assistant
-- [ ] 89. AI security/audit
-- [ ] 90. API/integrations
-- [ ] 91. Webhooks/background jobs
+- [x] 69. Library  (delivered as phases 71-72 build: catalog/copies/loans/reservations)
+- [x] 70. Digital library  (EBOOK/DOCUMENT/LINK items with access levels)
+- [x] 71-72. Library + digital library module
+- [x] 73. Assets
+- [x] 74. Facility booking
+- [x] 75. Extracurricular
+- [x] 76. Achievements
+- [x] 77. Counseling
+- [x] 78. Discipline
+- [x] 79. Secure documents
+- [x] 80. Import/export
+- [x] 81. Reporting engine
+- [x] 82. Analytics
+- [x] 83. Academic risk indicators
+- [x] 84. AI provider abstraction
+- [x] 85. AI tool permission system
+- [x] 86. AI admin assistant
+- [x] 87. AI teacher assistant
+- [x] 88. AI student assistant
+- [x] 89. AI security/audit
+- [x] 90. API/integrations
+- [x] 91. Webhooks/background jobs
 - [ ] 92. Caching/performance
 - [ ] 93. Security hardening
 - [ ] 94. Privacy/audit/retention
