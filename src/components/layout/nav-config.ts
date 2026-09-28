@@ -85,6 +85,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { label: "Finance", href: "/app/finance", permission: "finance.read", feature: "finance" },
       { label: "Assets", href: "/app/assets", permission: "asset.read" },
       { label: "Facilities", href: "/app/facilities", permission: "facility.read" },
+      { label: "Documents", href: "/app/documents", permission: "document.read" },
     ],
   },
   {
@@ -100,6 +101,7 @@ export const ADMIN_NAV: NavGroup[] = [
     label: "Intelligence",
     items: [
       { label: "Analytics", href: "/app/analytics", permission: "reporting.read" },
+      { label: "Reports", href: "/app/reports", permission: "reporting.read" },
       { label: "AI Assistant", href: "/app/assistant", permission: "ai.use", feature: "ai" },
     ],
   },
@@ -108,6 +110,7 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { label: "Users", href: "/app/users", permission: "user.read" },
       { label: "Roles", href: "/app/roles", permission: "role.read" },
+      { label: "Import", href: "/app/import", permission: "student.import" },
       { label: "Integrations", href: "/app/integrations", permission: "apikey.manage" },
       { label: "Audit", href: "/app/audit", permission: "audit.read" },
       { label: "Settings", href: "/app/settings", permission: "setting.read" },

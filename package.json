@@ -31,9 +31,10 @@
     "test:library": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/library-test.ts",
     "test:assets": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/assets-facilities-test.ts",
     "test:activities": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/activities-wellbeing-test.ts",
+    "test:data": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/data-import-export-test.ts",
     "test:ai": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/ai-assistant-test.ts",
     "test:platform": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/platform-integration-test.ts",
-    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation && npm run test:admissions && npm run test:timetable && npm run test:work && npm run test:ops && npm run test:library && npm run test:assets && npm run test:activities && npm run test:ai && npm run test:platform",
+    "verify": "npm run typecheck && npm run lint && npm run test:qr && npm run test:isolation && npm run test:admissions && npm run test:timetable && npm run test:work && npm run test:ops && npm run test:library && npm run test:assets && npm run test:activities && npm run test:data && npm run test:ai && npm run test:platform",
     "prepare": "prisma generate"
   },
   "prisma": {
