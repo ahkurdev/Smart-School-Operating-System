@@ -48,6 +48,22 @@ export function registerAllJobs(): void {
     }
   });
 
+  // Deliver a notification on an external channel. In dev the console provider
+  // just logs; a real provider adapter would send here. Marks the row SENT/FAILED.
+  registerJob("notification.deliver", async (payload) => {
+    const id = String(payload.notificationId ?? "");
+    const row = await prisma.notification.findUnique({ where: { id }, select: { id: true, channel: true, title: true } });
+    if (!row) return { ok: false };
+    try {
+      const { sendExternalNotification } = await import("@/server/services/notification-provider");
+      await sendExternalNotification(row.channel, { title: row.title });
+      await prisma.notification.update({ where: { id }, data: { status: "SENT", sentAt: new Date() } });
+    } catch (e) {
+      await prisma.notification.update({ where: { id }, data: { status: "FAILED" } }).catch(() => {});
+      throw e;
+    }
+  });
+
   // A no-op example handler proving the queue surface (used by tests).
   registerJob("noop", async () => ({ ok: true }));
 }

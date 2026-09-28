@@ -88,6 +88,22 @@ export async function publishAnnouncement(actor: Actor, id: string) {
     data: { status: "PUBLISHED", publishAt: existing.publishAt ?? new Date() },
   });
   await recordAudit({ actor, action: "announcement.publish", resource: "Announcement", resourceId: id });
+
+  // Fan out an in-app notification to the tenant's users (best effort — a
+  // notification failure must never block publishing).
+  try {
+    const { notifyTenant } = await import("@/server/services/notification.service");
+    await notifyTenant(actor, {
+      type: "announcement",
+      title: updated.title,
+      body: updated.body?.slice(0, 160),
+      link: "/app/announcements",
+      metadata: { announcementId: id },
+    });
+  } catch {
+    // ignore — publish already succeeded
+  }
+
   return updated;
 }
 

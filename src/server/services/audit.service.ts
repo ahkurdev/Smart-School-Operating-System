@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db/client";
 import type { Actor } from "@/types/actor";
 import type { Prisma } from "@prisma/client";
+import { authorize } from "@/server/policies";
+import { requireTenantId } from "@/server/db/tenant";
 
 /**
  * Audit trail. Every meaningful mutation calls `recordAudit`. Events are
@@ -68,4 +70,64 @@ export async function recordAudit(input: AuditInput): Promise<void> {
     // Audit must never break the business operation; log-and-continue.
     // (A real deployment would also ship this to an error monitor.)
   }
+}
+
+export type AuditFilter = {
+  action?: string;
+  resource?: string;
+  actorUserId?: string;
+  from?: Date;
+  to?: Date;
+  page?: number;
+  pageSize?: number;
+};
+
+/** Read the tenant's audit trail, newest first. Requires `audit.read`. */
+export async function listAuditLog(actor: Actor, filter: AuditFilter = {}) {
+  authorize(actor, "audit.read");
+  const tenantId = requireTenantId(actor);
+  const page = Math.max(1, filter.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, filter.pageSize ?? 25));
+
+  const where: Prisma.AuditLogWhereInput = {
+    tenantId,
+    ...(filter.action ? { action: { contains: filter.action } } : {}),
+    ...(filter.resource ? { resource: filter.resource } : {}),
+    ...(filter.actorUserId ? { actorUserId: filter.actorUserId } : {}),
+    ...(filter.from || filter.to
+      ? { createdAt: { ...(filter.from ? { gte: filter.from } : {}), ...(filter.to ? { lte: filter.to } : {}) } }
+      : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        action: true,
+        resource: true,
+        resourceId: true,
+        actorType: true,
+        actorUserId: true,
+        actor: { select: { fullName: true, email: true } },
+        metadata: true,
+        ipAddress: true,
+        createdAt: true,
+      },
+    }),
+    prisma.auditLog.count({ where }),
+  ]);
+
+  return { rows, total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) };
+}
+
+/** Distinct resource names present in the tenant's audit trail (for filters). */
+export async function auditResources(actor: Actor): Promise<string[]> {
+  authorize(actor, "audit.read");
+  const tenantId = requireTenantId(actor);
+  const rows = await prisma.auditLog.findMany({ where: { tenantId }, distinct: ["resource"], select: { resource: true }, orderBy: { resource: "asc" } });
+  return rows.map((r) => r.resource);
 }
