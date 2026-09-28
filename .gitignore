@@ -11,6 +11,9 @@ next-env.d.ts
 # ---- local dev database (portable postgres, never committed) ----
 .pgsql/
 .pgdata/
+# Portable Postgres / toolchain download archives (large binaries)
+*.zip
+*.tar.gz
 
 # ---- env & secrets ----
 .env
