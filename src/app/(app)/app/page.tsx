@@ -4,9 +4,11 @@ import { CalendarDays, Megaphone, Users, GraduationCap, School, BookOpen, UserCh
 import { requireActor } from "@/server/auth/context";
 import { getDashboardData } from "@/server/services/dashboard.service";
 import { getLandingDashboard } from "@/server/services/role-dashboard.service";
+import { listMyTenants } from "@/server/services/membership.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SchoolPicker } from "@/components/layout/school-picker";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -229,8 +231,24 @@ function StatCard({
 
 export default async function DashboardPage() {
   const actor = await requireActor();
-  const data = await getDashboardData(actor);
 
+  // No active school selected (e.g. a platform/support account, or a user with
+  // several memberships but none chosen): show a school picker instead of
+  // failing the tenant-scoped dashboard queries.
+  if (!actor.tenantId) {
+    const tenants = await listMyTenants(actor);
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <header className="ruled">
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Select a school to see its dashboard.</p>
+        </header>
+        <SchoolPicker tenants={tenants} isPlatform={actor.isPlatform} />
+      </div>
+    );
+  }
+
+  const data = await getDashboardData(actor);
   const attendance = data.attendanceToday;
 
   return (
