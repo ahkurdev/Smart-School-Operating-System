@@ -84,6 +84,16 @@ export const ADMIN_NAV: NavGroup[] = [
       { label: "Library", href: "/app/library", permission: "library.read", feature: "library" },
       { label: "Finance", href: "/app/finance", permission: "finance.read", feature: "finance" },
       { label: "Assets", href: "/app/assets", permission: "asset.read" },
+      { label: "Facilities", href: "/app/facilities", permission: "facility.read" },
+    ],
+  },
+  {
+    label: "Student life",
+    items: [
+      { label: "Extracurricular", href: "/app/extracurricular", permission: "extracurricular.read" },
+      { label: "Achievements", href: "/app/achievements", permission: "achievement.read" },
+      { label: "Counseling", href: "/app/counseling", permission: "counseling.read", feature: "counseling" },
+      { label: "Discipline", href: "/app/discipline", permission: "discipline.read", feature: "discipline" },
     ],
   },
   {

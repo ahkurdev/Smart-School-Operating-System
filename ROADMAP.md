@@ -69,11 +69,11 @@ tests, permissions, states, responsive, a11y, docs). Status legend:
 - [x] 63. Grade workflow
 - [x] 64. Report cards
 - [x] 65. Exam management
-- [ ] 66. Announcements
-- [ ] 67. Notification architecture
-- [ ] 68. Messaging safeguards
-- [ ] 69. Library
-- [ ] 70. Digital library
+- [x] 66. Announcements
+- [x] 67. Notification architecture
+- [x] 68. Messaging safeguards
+- [x] 69. Library
+- [x] 70. Digital library
 - [ ] 71. Finance billing  (NOTE: storage abstraction delivered early here)
 - [ ] 72. Payments
 - [ ] 73. Assets
